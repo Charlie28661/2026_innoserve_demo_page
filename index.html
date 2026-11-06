@@ -1,0 +1,1095 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SafeTwin 展示</title>
+<style>
+:root{
+  --bg:#F2F2F7; --bg-elev:#FFFFFF; --card:rgba(255,255,255,.78); --card-solid:#FFFFFF;
+  --fill:rgba(120,120,128,.12); --fill2:rgba(120,120,128,.20); --fill3:rgba(118,118,128,.24);
+  --label:#000000; --label2:rgba(60,60,67,.62); --label3:rgba(60,60,67,.32); --sep:rgba(60,60,67,.16);
+  --thumb:#FFFFFF; --ghost:rgba(60,60,67,.10);
+  --blue:#007AFF; --green:#34C759; --red:#FF3B30; --orange:#FF9500; --yellow:#FFCC00; --indigo:#5856D6;
+  --purple:#AF52DE; --pink:#FF2D55; --teal:#30B0C7; --mint:#00C7BE; --gray:#8E8E93;
+  --accent:var(--blue);
+  --shadow:0 1px 0 rgba(0,0,0,.02), 0 10px 30px rgba(0,0,0,.07);
+  --shadow-lg:0 20px 60px rgba(0,0,0,.18);
+  --r:22px; --fs:1;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#000000; --bg-elev:#1C1C1E; --card:rgba(28,28,30,.74); --card-solid:#1C1C1E;
+    --fill:rgba(118,118,128,.24); --fill2:rgba(118,118,128,.32); --fill3:rgba(118,118,128,.36);
+    --label:#FFFFFF; --label2:rgba(235,235,245,.62); --label3:rgba(235,235,245,.30); --sep:rgba(84,84,88,.55);
+    --thumb:#636366; --ghost:rgba(235,235,245,.09);
+    --blue:#0A84FF; --green:#30D158; --red:#FF453A; --orange:#FF9F0A; --yellow:#FFD60A; --indigo:#5E5CE6;
+    --purple:#BF5AF2; --pink:#FF375F; --teal:#40C8E0; --mint:#63E6E2; --gray:#98989D;
+    --shadow:0 1px 0 rgba(255,255,255,.03) inset, 0 10px 30px rgba(0,0,0,.5);
+    --shadow-lg:0 20px 60px rgba(0,0,0,.7);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#000000; --bg-elev:#1C1C1E; --card:rgba(28,28,30,.74); --card-solid:#1C1C1E;
+  --fill:rgba(118,118,128,.24); --fill2:rgba(118,118,128,.32); --fill3:rgba(118,118,128,.36);
+  --label:#FFFFFF; --label2:rgba(235,235,245,.62); --label3:rgba(235,235,245,.30); --sep:rgba(84,84,88,.55);
+  --thumb:#636366; --ghost:rgba(235,235,245,.09);
+  --blue:#0A84FF; --green:#30D158; --red:#FF453A; --orange:#FF9F0A; --yellow:#FFD60A; --indigo:#5E5CE6;
+  --purple:#BF5AF2; --pink:#FF375F; --teal:#40C8E0; --mint:#63E6E2; --gray:#98989D;
+  --shadow:0 1px 0 rgba(255,255,255,.03) inset, 0 10px 30px rgba(0,0,0,.5);
+  --shadow-lg:0 20px 60px rgba(0,0,0,.7);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:var(--bg); color:var(--label);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro TC","PingFang TC","Segoe UI Variable Text","Segoe UI","Microsoft JhengHei UI","Microsoft JhengHei","Noto Sans TC",system-ui,sans-serif;
+  font-size:calc(15px * var(--fs)); line-height:1.4; -webkit-font-smoothing:antialiased;
+  overflow-x:hidden; transition:background .4s;
+}
+.num,.tab{font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit}
+/* 背景光暈 */
+#glow{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;opacity:1;transition:opacity .6s}
+#glow i{position:absolute;width:46vmax;height:46vmax;border-radius:50%;filter:blur(90px);opacity:.14}
+#glow i:nth-child(1){background:var(--accent);left:-12vmax;top:-14vmax}
+#glow i:nth-child(2){background:var(--pink);right:-16vmax;top:12vmax;opacity:.08}
+#glow i:nth-child(3){background:var(--teal);left:24vmax;bottom:-24vmax;opacity:.09}
+body.noglow #glow{opacity:0}
+.glass{background:var(--card);backdrop-filter:saturate(180%) blur(24px);-webkit-backdrop-filter:saturate(180%) blur(24px)}
+body.noglass .glass{background:var(--card-solid);backdrop-filter:none;-webkit-backdrop-filter:none}
+.card,.rcard{background:var(--card-solid)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+::selection{background:color-mix(in srgb,var(--accent) 24%,transparent)}
+.sheet .body{scrollbar-width:thin;scrollbar-color:var(--fill3) transparent}
+.avatar svg{width:30px;height:30px;fill:currentColor}
+
+/* 導覽列 */
+.nav{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:16px;padding:12px 24px;border-bottom:.5px solid var(--sep)}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.appicon{width:38px;height:38px;border-radius:10px;flex:none;display:grid;place-items:center;
+  background:linear-gradient(145deg,var(--accent),color-mix(in srgb,var(--accent) 55%,var(--indigo)));box-shadow:0 4px 14px color-mix(in srgb,var(--accent) 40%,transparent)}
+.appicon svg{width:22px;height:22px}
+.brand .t{font-weight:700;font-size:calc(19px*var(--fs));letter-spacing:-.2px}
+.brand .s{font-size:calc(12px*var(--fs));color:var(--label2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.spacer{flex:1}
+.seg{position:relative;display:inline-grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--fill);border-radius:9px;padding:2px;user-select:none}
+.seg button{position:relative;z-index:1;border:0;background:none;padding:6px 14px;font-size:calc(13px*var(--fs));font-weight:500;border-radius:7px;cursor:pointer;white-space:nowrap;transition:color .2s}
+.seg button[aria-pressed="true"]{font-weight:600}
+.seg .thumb{position:absolute;z-index:0;top:2px;bottom:2px;left:2px;border-radius:7px;background:var(--thumb);
+  box-shadow:0 3px 8px rgba(0,0,0,.12),0 3px 1px rgba(0,0,0,.04);transition:transform .35s cubic-bezier(.3,1.3,.5,1),width .35s}
+.seg.big button{padding:7px 18px;font-size:calc(14px*var(--fs))}
+.iconbtn{width:36px;height:36px;border-radius:50%;border:0;background:var(--fill);display:grid;place-items:center;cursor:pointer;transition:transform .15s,background .2s;flex:none}
+.iconbtn:hover{background:var(--fill2)}
+.iconbtn:active{transform:scale(.9)}
+.iconbtn svg{width:18px;height:18px;fill:var(--accent)}
+.iconbtn.primary{background:var(--accent)}
+.iconbtn.primary svg{fill:#fff}
+.tools{display:flex;gap:8px;align-items:center}
+
+/* 主體 */
+main{position:relative;z-index:1;max-width:1560px;margin:0 auto;padding:22px 24px 40px}
+.scene{display:none}
+.scene.on{display:block;animation:sceneIn .5s cubic-bezier(.2,.9,.3,1)}
+@keyframes sceneIn{from{opacity:0;transform:translateY(10px) scale(.995)}}
+body.reduce .scene.on{animation:none}
+.card{border-radius:var(--r);box-shadow:var(--shadow);padding:18px 20px}
+.h1{font-size:calc(30px*var(--fs));font-weight:700;letter-spacing:-.5px;margin:0 0 16px}
+.lead{color:var(--label2);margin:0 0 18px;font-size:calc(15px*var(--fs))}
+.caption{font-size:calc(12px*var(--fs));color:var(--label2)}
+.sectitle{font-size:calc(13px*var(--fs));font-weight:600;color:var(--label2);text-transform:none;letter-spacing:.2px;margin:0 0 10px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-weight:600;font-size:calc(13px*var(--fs));
+  background:color-mix(in srgb,var(--c) 16%,transparent);color:var(--c)}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--c)}
+
+/* 旁白 */
+.narr{display:flex;align-items:center;gap:14px;margin-bottom:18px;padding:14px 18px;border-radius:var(--r);min-height:58px}
+.narr .stepno{flex:none;font-weight:700;color:#fff;background:var(--accent);border-radius:999px;padding:3px 11px;font-size:calc(13px*var(--fs))}
+.narr .txt{font-size:calc(17px*var(--fs));font-weight:500;letter-spacing:-.1px}
+.narr .txt b{font-weight:700}
+.narr.fade .txt{animation:txtIn .45s ease}
+@keyframes txtIn{from{opacity:0;transform:translateY(4px)}}
+body.nonarr .narr{display:none}
+
+/* 場景一：重識別 */
+.reid{display:grid;grid-template-columns:minmax(300px,360px) 1fr;gap:20px;align-items:start}
+.leftcol{display:grid;gap:20px}
+.att-top{display:flex;gap:14px;align-items:center;margin-bottom:14px}
+.avatar{width:56px;height:56px;border-radius:50%;flex:none;display:grid;place-items:center;font-weight:700;font-size:24px;color:#fff;
+  background:linear-gradient(160deg,#A2A2A8,#6E6E73);position:relative;transition:background .5s}
+.avatar.found{background:linear-gradient(160deg,var(--red),color-mix(in srgb,var(--red) 60%,#000))}
+.avatar.found::after{content:"";position:absolute;inset:-5px;border-radius:50%;border:2px solid var(--red);animation:ring 1.6s ease-out infinite}
+@keyframes ring{from{opacity:.9;transform:scale(.92)}to{opacity:0;transform:scale(1.35)}}
+.att-top .t{font-weight:700;font-size:calc(17px*var(--fs))}
+.att-top .s{font-size:calc(12.5px*var(--fs));color:var(--label2)}
+.chips{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.chip{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:var(--fill);transition:background .35s,transform .35s cubic-bezier(.3,1.5,.5,1),opacity .35s}
+.chip .ci{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;background:var(--fill2);color:var(--label2);transition:all .35s}
+.chip .cl{flex:1;color:var(--label2)}
+.chip .cv{font-weight:600;filter:blur(6px);opacity:.5;transition:filter .45s,opacity .45s}
+.chip.on{background:color-mix(in srgb,var(--accent) 14%,transparent)}
+.chip.on .ci{background:var(--accent);color:#fff}
+.chip.on .cv{filter:none;opacity:1}
+.chip.on .cl{color:var(--label)}
+.chip.pop{transform:scale(1.04)}
+.want{margin-top:14px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:calc(13px*var(--fs));color:var(--label2)}
+.want span.q{padding:3px 9px;border-radius:999px;background:var(--fill);color:var(--label);font-weight:500}
+.dots{display:flex;gap:6px;margin-top:16px;justify-content:center}
+.dots i{width:7px;height:7px;border-radius:50%;background:var(--fill3);transition:all .3s}
+.dots i.on{background:var(--accent);width:20px;border-radius:4px}
+
+.rgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.rcard{position:relative;border-radius:var(--r);box-shadow:var(--shadow);padding:16px 16px 14px;overflow:hidden;transition:transform .4s cubic-bezier(.3,1.3,.5,1),box-shadow .4s}
+.rcard.hit{box-shadow:0 0 0 2px var(--red),var(--shadow)}
+.rhead{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.rhead .swc{width:10px;height:10px;border-radius:3px;background:var(--tint);flex:none}
+.rhead .nm{font-weight:650;font-size:calc(15px*var(--fs))}
+.rhead .sb{font-size:calc(12px*var(--fs));color:var(--label2)}
+.rhead .tag{margin-left:auto;font-size:calc(11px*var(--fs));font-weight:600;padding:2px 8px;border-radius:6px;background:var(--fill);color:var(--label2)}
+.rcard canvas{display:block;width:100%;border-radius:12px;background:var(--fill)}
+.rcount{display:flex;align-items:baseline;gap:8px;margin-top:12px}
+.rcount .big{font-size:calc(34px*var(--fs));font-weight:700;letter-spacing:-1px;line-height:1}
+.rcount .of{color:var(--label2);font-size:calc(13px*var(--fs))}
+.rbar{height:5px;border-radius:3px;background:var(--fill);margin-top:10px;overflow:hidden}
+.rbar i{display:block;height:100%;width:100%;background:var(--tint);border-radius:3px;transition:width .8s cubic-bezier(.2,.9,.3,1)}
+.verdict{margin-top:12px;min-height:26px;opacity:0;transform:translateY(6px);transition:opacity .45s,transform .45s}
+.verdict.on{opacity:1;transform:none}
+.verdict .d{margin-top:8px;font-size:calc(13px*var(--fs));color:var(--label2)}
+.verdict .kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin-top:8px;font-size:calc(13.5px*var(--fs))}
+.verdict .kv span:nth-child(odd){color:var(--label2)}
+.verdict .kv span:nth-child(even){font-weight:650;color:var(--red)}
+.spread{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.spread span{font-size:calc(12px*var(--fs));padding:2px 8px;border-radius:999px;background:var(--fill)}
+
+.pop .row{display:grid;grid-template-columns:minmax(90px,130px) 1fr auto;gap:10px;align-items:center;padding:7px 0;border-top:.5px solid var(--sep)}
+.pop .row:first-of-type{border-top:0}
+.pop .nm{font-size:calc(13px*var(--fs))}
+.pop .nm small{display:block;color:var(--label2);font-size:calc(11px*var(--fs))}
+.pop .bar{height:8px;border-radius:4px;background:var(--fill);overflow:hidden}
+.pop .bar i{display:block;height:100%;border-radius:4px;background:var(--tint);min-width:2px;transition:width .9s cubic-bezier(.2,.9,.3,1)}
+.pop .v{font-weight:650;font-size:calc(13px*var(--fs));text-align:right;min-width:74px}
+.pop .v small{display:block;font-weight:400;color:var(--label2);font-size:calc(11px*var(--fs))}
+
+/* 通知橫幅 */
+.toast{position:fixed;z-index:60;left:50%;top:14px;width:min(560px,calc(100% - 32px));transform:translate(-50%,-140%);
+  border-radius:24px;padding:12px 14px;display:flex;gap:12px;align-items:center;box-shadow:var(--shadow-lg);transition:transform .6s cubic-bezier(.3,1.25,.4,1)}
+.toast.on{transform:translate(-50%,0)}
+.toast .appicon{width:38px;height:38px}
+.toast .tt{font-weight:650;font-size:calc(14px*var(--fs))}
+.toast .tt small{font-weight:400;color:var(--label2);margin-left:6px}
+.toast .tb{font-size:calc(14px*var(--fs))}
+
+/* 場景二、三：圖 */
+.chartwrap{display:grid;grid-template-columns:1fr minmax(300px,380px);gap:20px;align-items:start}
+svg.chart{width:100%;height:auto;display:block;overflow:visible;touch-action:none}
+svg.chart text{fill:var(--label2);font-size:13px;font-family:inherit;paint-order:stroke;stroke:var(--bg-elev);stroke-width:4px;stroke-linejoin:round}
+svg.chart #cTag{stroke:none}
+svg.chart .axis line,svg.chart .grid line{stroke:var(--sep)}
+svg.chart .grid line{stroke-dasharray:2 4}
+svg.chart .ttl{fill:var(--label);font-weight:600;font-size:14px}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:10px;font-size:calc(13px*var(--fs));color:var(--label2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:50%;background:var(--c)}
+.legend i.line{width:18px;height:3px;border-radius:2px}
+.legend i.dash{width:18px;height:0;border-top:2px dashed var(--c);background:none;border-radius:0}
+.readout .bigeps{font-size:calc(46px*var(--fs));font-weight:700;letter-spacing:-1.5px;line-height:1.05}
+.readout .bigeps small{font-size:.45em;color:var(--label2);font-weight:600;letter-spacing:0;margin-left:6px}
+.metric{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:10px 0;border-top:.5px solid var(--sep)}
+.metric .k{color:var(--label2);font-size:calc(13.5px*var(--fs))}
+.metric .k small{display:block;font-size:calc(11.5px*var(--fs))}
+.metric .v{font-weight:650;font-size:calc(19px*var(--fs));text-align:right}
+.metric .v small{display:block;font-weight:400;font-size:calc(11.5px*var(--fs));color:var(--label2)}
+.measured{margin-top:12px;padding:12px 14px;border-radius:16px;background:var(--fill)}
+.measured .mrow{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:5px 0;font-size:calc(13.5px*var(--fs))}
+.measured .mrow i{width:9px;height:9px;border-radius:50%;background:var(--c)}
+.measured .mrow b{font-weight:650}
+.note{font-size:calc(12px*var(--fs));color:var(--label2);margin-top:10px}
+
+/* iOS 滑桿 */
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:28px;background:transparent;margin:0;--p:50%}
+input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:linear-gradient(to right,var(--accent) var(--p),var(--fill3) var(--p))}
+input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:var(--fill3)}
+input[type=range]::-moz-range-progress{height:4px;border-radius:2px;background:var(--accent)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;margin-top:-11px;border-radius:50%;background:#fff;box-shadow:0 3px 8px rgba(0,0,0,.18),0 0 0 .5px rgba(0,0,0,.06);cursor:grab}
+input[type=range]::-moz-range-thumb{width:26px;height:26px;border:0;border-radius:50%;background:#fff;box-shadow:0 3px 8px rgba(0,0,0,.18)}
+
+/* 設定面板 */
+.sheet{position:fixed;z-index:50;top:10px;right:10px;bottom:10px;width:min(400px,calc(100% - 20px));border-radius:28px;box-shadow:var(--shadow-lg);
+  transform:translateX(calc(100% + 30px));transition:transform .55s cubic-bezier(.3,1.1,.4,1);display:flex;flex-direction:column;overflow:hidden}
+.sheet.on{transform:none}
+.sheet header{display:flex;align-items:center;padding:16px 18px 8px}
+.sheet header .t{font-weight:700;font-size:calc(22px*var(--fs));flex:1;letter-spacing:-.3px}
+.sheet .done{border:0;background:none;color:var(--accent);font-weight:600;font-size:calc(16px*var(--fs));cursor:pointer;padding:6px}
+.sheet .body{overflow:auto;padding:4px 16px 24px;flex:1}
+.grp{margin:16px 0 0}
+.grp h4{margin:0 0 6px 14px;font-size:calc(12.5px*var(--fs));font-weight:500;color:var(--label2);text-transform:uppercase;letter-spacing:.3px}
+.grp h4 small{text-transform:none;letter-spacing:0;margin-left:6px;color:var(--accent)}
+.list{background:var(--bg-elev);border-radius:14px;overflow:hidden}
+.item{display:flex;align-items:center;gap:12px;min-height:46px;padding:7px 14px;position:relative}
+.item+.item::before{content:"";position:absolute;top:0;left:14px;right:0;border-top:.5px solid var(--sep)}
+.item .l{flex:1;font-size:calc(15px*var(--fs))}
+.item .val{color:var(--label2);font-size:calc(14px*var(--fs));min-width:52px;text-align:right}
+.item.col{flex-direction:column;align-items:stretch;gap:2px;padding:9px 14px}
+.item.col .top{display:flex;justify-content:space-between}
+.item select{font:inherit;font-size:calc(14px*var(--fs));color:var(--accent);background:transparent;border:0;text-align:right;cursor:pointer;max-width:55%}
+.item select option{color:initial}
+.sw{position:relative;width:51px;height:31px;flex:none}
+.sw input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer;z-index:1}
+.sw span{position:absolute;inset:0;border-radius:16px;background:var(--fill3);transition:background .25s}
+.sw span::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 3px 8px rgba(0,0,0,.15),0 3px 1px rgba(0,0,0,.06);transition:transform .3s cubic-bezier(.3,1.4,.5,1)}
+.sw input:checked+span{background:var(--green)}
+.sw input:checked+span::after{transform:translateX(20px)}
+.swatches{display:flex;gap:10px}
+.swatches button{width:26px;height:26px;border-radius:50%;border:0;cursor:pointer;background:var(--c);box-shadow:0 0 0 0 var(--c);transition:box-shadow .2s,transform .2s}
+.swatches button[aria-pressed="true"]{box-shadow:0 0 0 2px var(--bg-elev),0 0 0 4px var(--c)}
+.swatches button:active{transform:scale(.88)}
+.item .seg{flex:none}
+.item .seg button{padding:5px 10px}
+.reset{display:block;width:100%;margin-top:18px;border:0;border-radius:14px;background:var(--bg-elev);color:var(--red);font-size:calc(15px*var(--fs));padding:13px;cursor:pointer}
+.keys{margin-top:16px;font-size:calc(12.5px*var(--fs));color:var(--label2);display:grid;grid-template-columns:auto 1fr;gap:6px 12px;padding:0 6px}
+kbd{font-family:inherit;font-size:.9em;padding:1px 7px;border-radius:6px;background:var(--fill);border:.5px solid var(--sep);color:var(--label)}
+.scrim{position:fixed;inset:0;z-index:45;background:rgba(0,0,0,.18);opacity:0;pointer-events:none;transition:opacity .4s}
+.scrim.on{opacity:1;pointer-events:auto}
+
+footer{position:relative;z-index:1;max-width:1560px;margin:0 auto;padding:0 24px 28px;font-size:calc(12px*var(--fs));color:var(--label2)}
+body.reduce,body.reduce *{transition-duration:0s!important;animation-duration:0s!important}
+
+.reid>*,.chartwrap>*,.leftcol>*{min-width:0}
+@media (max-width:600px){ #bBack,#bFwd,#bFull{display:none} .tools{gap:6px} }
+@media (max-width:1020px){
+  .reid,.chartwrap{grid-template-columns:1fr}
+  .nav{flex-wrap:wrap;padding:10px 16px}
+  .nav .seg.big{order:3;width:100%}
+  main{padding:16px 16px 32px}
+  footer{padding:0 16px 24px}
+  .brand .s{display:none}
+}
+</style>
+</head>
+<body>
+<div id="glow"><i></i><i></i><i></i></div>
+
+<nav class="nav glass">
+  <div class="brand">
+    <div class="appicon"><svg viewBox="0 0 24 24"><path fill="#fff" d="M12 2 4 5.2v6.1c0 5 3.4 9.4 8 10.7 4.6-1.3 8-5.7 8-10.7V5.2L12 2Zm0 5.2a2.6 2.6 0 1 1 0 5.2 2.6 2.6 0 0 1 0-5.2Zm0 12.1c-2-.7-3.6-2.1-4.5-3.9.4-1.5 3-2.3 4.5-2.3s4.1.8 4.5 2.3c-.9 1.8-2.5 3.2-4.5 3.9Z"/></svg></div>
+    <div style="min-width:0"><div class="t">SafeTwin</div></div>
+  </div>
+  <div class="spacer"></div>
+  <div class="seg big" id="sceneSeg" role="group" aria-label="切換場景">
+    <span class="thumb"></span>
+    <button data-v="reid">重識別攻擊</button>
+    <button data-v="eps">ε 與成員推論</button>
+    <button data-v="pareto">隱私 × 效用</button>
+  </div>
+  <div class="spacer"></div>
+  <div class="tools">
+    <button class="iconbtn primary" id="bPlay" title="播放／暫停（空白鍵）" aria-label="播放或暫停"><svg viewBox="0 0 24 24" id="playIcon"><path d="M8 5v14l11-7z"/></svg></button>
+    <button class="iconbtn" id="bSet" title="設定（S）" aria-label="開啟設定"><svg viewBox="0 0 24 24"><path d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1c.5.4 1.1.7 1.7 1l.4 2.6h4l.4-2.6c.6-.3 1.2-.6 1.7-1l2.5 1 2-3.5L19.4 13ZM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z" transform="translate(-1 0)"/></svg></button>
+  </div>
+</nav>
+
+<main>
+  <!-- 場景一 -->
+  <section class="scene" id="scene-reid">
+    <h1 class="h1" id="reidH1">同一個攻擊者，查多份釋出資料</h1>
+    <div class="narr card" id="reidNarr"><span class="stepno" id="reidStepNo"></span><span class="txt" id="reidTxt"></span></div>
+    <div class="reid">
+      <div class="leftcol">
+        <div class="card">
+          <div class="att-top"><div class="avatar" id="avatar"></div>
+            <div><div class="t">攻擊者知道</div><div class="s" id="attSub"></div></div></div>
+          <ol class="chips" id="chips"></ol>
+        </div>
+        <div class="card pop" id="popCard"></div>
+      </div>
+      <div class="rgrid" id="rgrid"></div>
+    </div>
+  </section>
+
+  <!-- 場景二 -->
+  <section class="scene" id="scene-eps">
+    <h1 class="h1">ε 越大，理論上允許的攻擊越強</h1>
+    <div class="chartwrap">
+      <div class="card"><svg class="chart" id="epsChart" viewBox="0 0 800 470"></svg><div class="legend" id="epsLegend"></div></div>
+      <div class="card readout" id="epsReadout"></div>
+    </div>
+  </section>
+
+  <!-- 場景三 -->
+  <section class="scene" id="scene-pareto">
+    <h1 class="h1">隱私與效用，放在同一張圖上</h1>
+    <div class="narr card" id="parNarr"><span class="stepno" id="parStepNo"></span><span class="txt" id="parTxt"></span></div>
+    <div class="card" style="max-width:1100px;margin:0 auto"><svg class="chart" id="parChart" viewBox="0 0 800 470"></svg><div class="legend" id="parLegend"></div></div>
+  </section>
+</main>
+<footer id="foot"></footer>
+
+<div class="toast glass" id="toast" role="status" aria-live="polite"><div class="appicon"><svg viewBox="0 0 24 24"><path fill="#fff" d="M12 2 4 5.2v6.1c0 5 3.4 9.4 8 10.7 4.6-1.3 8-5.7 8-10.7V5.2L12 2Z"/></svg></div><div><div class="tt" id="toastT"></div><div class="tb" id="toastB"></div></div></div>
+<div class="scrim" id="scrim"></div>
+<aside class="sheet glass" id="sheet" aria-label="設定"><header><div class="t">設定</div><button class="done" id="bDone">完成</button></header><div class="body" id="setBody"></div></aside>
+
+<div id="fatal" style="display:none;position:fixed;z-index:99;left:50%;top:90px;transform:translateX(-50%);width:min(640px,calc(100% - 32px));padding:18px 20px;border-radius:18px;background:#FF3B30;color:#fff;font-size:15px;line-height:1.5;box-shadow:0 20px 60px rgba(0,0,0,.25)"></div>
+<script>
+// 任何錯誤都直接顯示在畫面上，不必開主控台
+window.addEventListener("error", (e) => {
+  const f = document.getElementById("fatal");
+  if (!f || f.dataset.template) return;
+  f.style.display = "block";
+  f.innerHTML = "<b>頁面發生錯誤</b><br>" + String(e.message).replace(/</g, "&lt;") + "（第 " + e.lineno + " 行）<br><small>請把這段訊息截圖給開發者。</small>";
+});
+</script>
+<script>
+"use strict";
+const DATA = {"generated_at":"2026-11-06T16:53:07+00:00","summary_generated_at":"2026-11-06T14:53:50+00:00","releases":[{"id":"naive","name":"天真做法","sub":"只刪內部編號","file":"naive","synthetic":false},{"id":"kanon_k5","name":"k-anonymity","sub":"k = 5","file":"kanon_k5","synthetic":false},{"id":"kanon_k10","name":"k-anonymity","sub":"k = 10","file":"kanon_k10","synthetic":false},{"id":"dpsynth_eps0.5","name":"DP 合成","sub":"ε = 0.5・本隊釋出","file":"dpsynth_eps0.5_s42","synthetic":true},{"id":"dpsynth_eps2","name":"DP 合成","sub":"ε = 2","file":"dpsynth_eps2_s42","synthetic":true},{"id":"dpsynth_eps8","name":"DP 合成","sub":"ε = 8","file":"dpsynth_eps8_s42","synthetic":true},{"id":"pasynth_eps0.5","name":"用途感知 DP 合成","sub":"ε = 0.5・延伸實驗","file":"pasynth_eps0.5_s42","synthetic":true}],"groups":{"real":{"U1_retained_lift":{"mean":1.0,"min":1.0,"max":1.0,"n":1},"U1_pr_auc":{"mean":0.8287824507890893,"min":0.8287824507890893,"max":0.8287824507890893,"n":1},"U1_top200_precision":{"mean":1.0,"min":1.0,"max":1.0,"n":1},"pr_auc_noskill":0.24800779174783072,"runs":["real"]},"naive":{"U1_retained_lift":{"mean":1.0,"min":1.0,"max":1.0,"n":1},"U1_pr_auc":{"mean":0.8287824507890893,"min":0.8287824507890893,"max":0.8287824507890893,"n":1},"U1_top200_precision":{"mean":1.0,"min":1.0,"max":1.0,"n":1},"R1_reid_rate_k4":{"mean":0.08314517200159384,"min":0.08314517200159384,"max":0.08314517200159384,"n":1},"R1_attack_unsuccessful":false,"R2_auc":{"mean":0.9275,"min":0.9275,"max":0.9275,"n":1},"R2_worst_auc_ci_upper":0.93525,"R2_attack_unsuccessful":false,"R2b_cal_auc":{"mean":0.7501855,"min":0.7501855,"max":0.7501855,"n":1},"R2b_cal_attack_unsuccessful":false,"R2b_cal_worst_auc_ci_upper":0.7651924124999999,"R2b_dr_auc":{"mean":0.529897125,"min":0.529897125,"max":0.529897125,"n":1},"R2b_dr_worst_auc_ci_upper":0.547881015625,"R2b_dr_attack_unsuccessful":true,"R2c_auc":{"mean":0.949374375,"min":0.949374375,"max":0.949374375,"n":1},"R2c_worst_auc_ci_upper":0.956212209375,"R2c_attack_unsuccessful":false,"R2c_rare_auc":{"mean":0.9847328244274809,"min":0.9847328244274809,"max":0.9847328244274809,"n":1},"R3_race_leak_gap_pp":{"mean":4.604246203341394,"min":4.604246203341394,"max":4.604246203341394,"n":1},"R4_dcr_zero_rate":{"mean":1.0,"min":1.0,"max":1.0,"n":1},"R4_ref_dcr_zero_rate":{"mean":0.1444,"min":0.1444,"max":0.1444,"n":1},"U2_sex_income_assoc":{"mean":0.2189777009737776,"min":0.2189777009737776,"max":0.2189777009737776,"n":1},"U2_sex_income_assoc_train":0.2189777009737776,"pr_auc_noskill":0.24800779174783072,"R2_theoretical_auc_bound":null,"runs":["naive"]},"kanon_k5":{"U1_retained_lift":{"mean":0.9801572283364658,"min":0.9801572283364658,"max":0.9801572283364658,"n":1},"U1_pr_auc":{"mean":0.8172582718417667,"min":0.8172582718417667,"max":0.8172582718417667,"n":1},"U1_top200_precision":{"mean":1.0,"min":1.0,"max":1.0,"n":1},"R1_reid_rate_k4":{"mean":0.0,"min":0.0,"max":0.0,"n":1},"R1_attack_unsuccessful":true,"R2_auc":{"mean":0.71984725,"min":0.71984725,"max":0.71984725,"n":1},"R2_worst_auc_ci_upper":0.732555125,"R2_attack_unsuccessful":false,"R2b_cal_auc":{"mean":0.6021003750000001,"min":0.6021003750000001,"max":0.6021003750000001,"n":1},"R2b_cal_attack_unsuccessful":false,"R2b_cal_worst_auc_ci_upper":0.61949505625,"R3_race_leak_gap_pp":{"mean":1.1050733578298944,"min":1.1050733578298944,"max":1.1050733578298944,"n":1},"pr_auc_noskill":0.24800779174783072,"R2_theoretical_auc_bound":null,"runs":["kanon_k5"]},"kanon_k10":{"U1_retained_lift":{"mean":0.9764388201440694,"min":0.9764388201440694,"max":0.9764388201440694,"n":1},"U1_pr_auc":{"mean":0.8150987145916514,"min":0.8150987145916514,"max":0.8150987145916514,"n":1},"U1_top200_precision":{"mean":1.0,"min":1.0,"max":1.0,"n":1},"R1_reid_rate_k4":{"mean":0.0,"min":0.0,"max":0.0,"n":1},"R1_attack_unsuccessful":true,"R2_auc":{"mean":0.6978547500000001,"min":0.6978547500000001,"max":0.6978547500000001,"n":1},"R2_worst_auc_ci_upper":0.710518109375,"R2_attack_unsuccessful":false,"R2b_cal_auc":{"mean":0.58985825,"min":0.58985825,"max":0.58985825,"n":1},"R2b_cal_attack_unsuccessful":false,"R2b_cal_worst_auc_ci_upper":0.6072750968749999,"R3_race_leak_gap_pp":{"mean":0.9845119613802189,"min":0.9845119613802189,"max":0.9845119613802189,"n":1},"pr_auc_noskill":0.24800779174783072,"R2_theoretical_auc_bound":null,"runs":["kanon_k10"]},"dpsynth_eps0.5":{"U1_retained_lift":{"mean":0.8182990589209022,"min":0.8095381802948295,"max":0.8338839854333722,"n":3},"U1_pr_auc":{"mean":0.7232551486864005,"min":0.7181670523894412,"max":0.7323064790678633,"n":3},"U1_top200_precision":{"mean":0.9716666666666667,"min":0.955,"max":0.985,"n":3},"R1_reid_rate_k4":{"mean":7.378875754490047e-05,"min":0.0,"max":0.00013281976358082084,"n":3},"R1_attack_unsuccessful":true,"R2_auc":{"mean":0.5010623750000001,"min":0.497371,"max":0.506929375,"n":3},"R2_worst_auc_ci_upper":0.5248650625,"R2_attack_unsuccessful":true,"R2b_cal_auc":{"mean":0.506174,"min":0.5021715,"max":0.51250425,"n":3},"R2b_cal_attack_unsuccessful":true,"R2b_cal_worst_auc_ci_upper":0.5293760249999999,"R2b_dr_auc":{"mean":0.5060349166666667,"min":0.500957,"max":0.5097756250000001,"n":3},"R2b_dr_worst_auc_ci_upper":0.5276126531249999,"R2b_dr_attack_unsuccessful":true,"R2c_auc":{"mean":0.494936875,"min":0.4804701250000001,"max":0.5105284999999999,"n":3},"R2c_worst_auc_ci_upper":0.5281568624999999,"R2c_attack_unsuccessful":true,"R2c_rare_auc":{"mean":0.5041782340610622,"min":0.4969705851983359,"max":0.5156881977387024,"n":3},"R3_race_leak_gap_pp":{"mean":0.062365432818622946,"min":-0.0020520186733707924,"max":0.19017432646592503,"n":3},"R4_dcr_zero_rate":{"mean":0.08493333333333335,"min":0.0722,"max":0.0942,"n":3},"R4_ref_dcr_zero_rate":{"mean":0.1424,"min":0.1398,"max":0.1444,"n":3},"U2_sex_income_assoc":{"mean":0.07703262271595367,"min":0.005888520094103122,"max":0.21792079025656425,"n":3},"U2_sex_income_assoc_train":0.2189777009737776,"pr_auc_noskill":0.24800779174783072,"R2_theoretical_auc_bound":0.6224593312018546,"runs":["dpsynth_eps0.5_s42","dpsynth_eps0.5_s43","dpsynth_eps0.5_s44"]},"dpsynth_eps2":{"U1_retained_lift":{"mean":0.8774557181587476,"min":0.8612258635133513,"max":0.8956400388655201,"n":3},"U1_pr_auc":{"mean":0.75761183728528,"min":0.7481859489873108,"max":0.7681728299436528,"n":3},"U1_top200_precision":{"mean":0.9916666666666667,"min":0.98,"max":1.0,"n":3},"R1_reid_rate_k4":{"mean":0.00016233526659878103,"min":0.00013281976358082084,"max":0.0001770930181077611,"n":3},"R1_attack_unsuccessful":true,"R2_auc":{"mean":0.49777437499999994,"min":0.49146362499999996,"max":0.501503375,"n":3},"R2_worst_auc_ci_upper":0.51913066875,"R2_attack_unsuccessful":true,"R2b_cal_auc":{"mean":0.50457625,"min":0.49310149999999997,"max":0.5121051249999999,"n":3},"R2b_cal_attack_unsuccessful":true,"R2b_cal_worst_auc_ci_upper":0.5286845812500001,"R2b_dr_auc":{"mean":0.5142757083333334,"min":0.5125835,"max":0.51532075,"n":3},"R2b_dr_worst_auc_ci_upper":0.5342471375,"R2b_dr_attack_unsuccessful":true,"R2c_auc":{"mean":0.5100116666666668,"min":0.502179625,"max":0.5162331250000001,"n":3},"R2c_worst_auc_ci_upper":0.5339047562499999,"R2c_attack_unsuccessful":true,"R2c_rare_auc":{"mean":0.5024314023843764,"min":0.4785836573099833,"max":0.5251481978581215,"n":3},"R3_race_leak_gap_pp":{"mean":0.9257393605715961,"min":0.5098917366590183,"max":1.2795336525899037,"n":3},"R4_dcr_zero_rate":{"mean":0.09826666666666667,"min":0.0964,"max":0.0998,"n":3},"R4_ref_dcr_zero_rate":{"mean":0.1424,"min":0.1398,"max":0.1444,"n":3},"U2_sex_income_assoc":{"mean":0.2183597164699291,"min":0.21573581213932316,"max":0.2221164010728659,"n":3},"U2_sex_income_assoc_train":0.2189777009737776,"pr_auc_noskill":0.24800779174783072,"R2_theoretical_auc_bound":0.8807970779778824,"runs":["dpsynth_eps2_s42","dpsynth_eps2_s43","dpsynth_eps2_s44"]},"dpsynth_eps8":{"U1_retained_lift":{"mean":0.8860052332733686,"min":0.8802530861718406,"max":0.892054227649352,"n":3},"U1_pr_auc":{"mean":0.762577179010942,"min":0.759236477739297,"max":0.7660902816571964,"n":3},"U1_top200_precision":{"mean":0.995,"min":0.99,"max":1.0,"n":3},"R1_reid_rate_k4":{"mean":0.00011806201207184074,"min":0.0,"max":0.00022136627263470138,"n":3},"R1_attack_unsuccessful":true,"R2_auc":{"mean":0.5014233333333333,"min":0.49476149999999997,"max":0.5062418750000001,"n":3},"R2_worst_auc_ci_upper":0.5242747125,"R2_attack_unsuccessful":true,"R2b_cal_auc":{"mean":0.5093833333333333,"min":0.508763,"max":0.51007375,"n":3},"R2b_cal_attack_unsuccessful":true,"R2b_cal_worst_auc_ci_upper":0.5279290031250001,"R2b_dr_auc":{"mean":0.5121284583333333,"min":0.506756375,"max":0.519308,"n":3},"R2b_dr_worst_auc_ci_upper":0.5368698749999999,"R2b_dr_attack_unsuccessful":true,"R2c_auc":{"mean":0.513229125,"min":0.49939262500000003,"max":0.521048875,"n":3},"R2c_worst_auc_ci_upper":0.5388183281250001,"R2c_attack_unsuccessful":true,"R2c_rare_auc":{"mean":0.5313100137528084,"min":0.5059367978029032,"max":0.5479563375555742,"n":3},"R3_race_leak_gap_pp":{"mean":1.4332009253730738,"min":1.222172596572768,"max":1.7278394893136984,"n":3},"R4_dcr_zero_rate":{"mean":0.11913333333333333,"min":0.1156,"max":0.1212,"n":3},"R4_ref_dcr_zero_rate":{"mean":0.1424,"min":0.1398,"max":0.1444,"n":3},"U2_sex_income_assoc":{"mean":0.21151206400899905,"min":0.20999753302267338,"max":0.21381869952110238,"n":3},"U2_sex_income_assoc_train":0.2189777009737776,"pr_auc_noskill":0.24800779174783072,"R2_theoretical_auc_bound":0.9996646498695335,"runs":["dpsynth_eps8_s42","dpsynth_eps8_s43","dpsynth_eps8_s44"]},"pasynth_eps0.5":{"U1_retained_lift":{"mean":0.8352898755197881,"min":0.8080887742187421,"max":0.8505527887964287,"n":3},"U1_pr_auc":{"mean":0.733122984403451,"min":0.7173252740697893,"max":0.7419872976576682,"n":3},"U1_top200_precision":{"mean":0.9933333333333333,"min":0.98,"max":1.0,"n":3},"R1_reid_rate_k4":{"mean":8.854650905388055e-05,"min":0.0,"max":0.00013281976358082084,"n":3},"R1_attack_unsuccessful":true,"R2_auc":{"mean":0.5030415416666667,"min":0.500629125,"max":0.505923625,"n":3},"R2_worst_auc_ci_upper":0.524149375,"R2_attack_unsuccessful":true,"R2b_cal_auc":{"mean":0.5122731666666667,"min":0.5049414999999999,"max":0.5190565,"n":3},"R2b_cal_attack_unsuccessful":true,"R2b_cal_worst_auc_ci_upper":0.537949259375,"R2b_dr_auc":{"mean":0.5021317916666667,"min":0.498077625,"max":0.5057272500000001,"n":3},"R2b_dr_worst_auc_ci_upper":0.522820290625,"R2b_dr_attack_unsuccessful":true,"R2c_auc":{"mean":0.5014804166666668,"min":0.49028475000000005,"max":0.5093650000000001,"n":3},"R2c_worst_auc_ci_upper":0.526884025,"R2c_attack_unsuccessful":true,"R2c_rare_auc":{"mean":0.48541077636961427,"min":0.4656543139422905,"max":0.49796752229958335,"n":3},"R3_race_leak_gap_pp":{"mean":-0.021222264669730945,"min":-0.06378768268324175,"max":0.003174738949293654,"n":3},"R4_dcr_zero_rate":{"mean":0.07293333333333334,"min":0.0688,"max":0.0758,"n":3},"R4_ref_dcr_zero_rate":{"mean":0.1424,"min":0.1398,"max":0.1444,"n":3},"U2_sex_income_assoc":{"mean":0.2195478891578548,"min":0.20887169600296915,"max":0.2276333962169325,"n":3},"U2_sex_income_assoc_train":0.2189777009737776,"pr_auc_noskill":0.24800779174783072,"R2_theoretical_auc_bound":0.6224593312018546,"runs":["pasynth_eps0.5_s42","pasynth_eps0.5_s43","pasynth_eps0.5_s44"]}},"runs":[{"group":"dpsynth_eps0.5","eps":0.5,"seed":42,"R2":[0.497371,0.47935387187500006,0.5152291687499999],"R2b_cal":[0.50384625,0.48658084687500003,0.522471575],"R2b_dr":[0.500957,0.482778440625,0.5188093031250001],"R2c":[0.4804701250000001,0.46339847500000003,0.497055690625],"U1":0.8338839854333722},{"group":"dpsynth_eps0.5","eps":0.5,"seed":43,"R2":[0.506929375,0.489404128125,0.5248650625],"R2b_cal":[0.51250425,0.495923390625,0.5293760249999999],"R2b_dr":[0.507372125,0.48963051250000006,0.5248627],"R2c":[0.5105284999999999,0.492626346875,0.5281568624999999],"U1":0.8095381802948295},{"group":"dpsynth_eps0.5","eps":0.5,"seed":44,"R2":[0.49888675000000005,0.48124052500000003,0.5167638250000001],"R2b_cal":[0.5021715,0.48433994687500004,0.520413378125],"R2b_dr":[0.5097756250000001,0.49311626249999996,0.5276126531249999],"R2c":[0.493812,0.47562600625,0.51248005625],"U1":0.8114750110345051},{"group":"dpsynth_eps2","eps":2.0,"seed":42,"R2":[0.49146362499999996,0.47199458124999993,0.5092919124999999],"R2b_cal":[0.49310149999999997,0.47623080625,0.5119235906249999],"R2b_dr":[0.51532075,0.49783558749999995,0.5342471375],"R2c":[0.5162331250000001,0.498027109375,0.5339047562499999],"U1":0.8755012520973715},{"group":"dpsynth_eps2","eps":2.0,"seed":43,"R2":[0.500356125,0.48251870625,0.51913066875],"R2b_cal":[0.508522125,0.49141329999999994,0.525859259375],"R2b_dr":[0.514922875,0.498069315625,0.53262348125],"R2c":[0.502179625,0.485043246875,0.519709234375],"U1":0.8956400388655201},{"group":"dpsynth_eps2","eps":2.0,"seed":44,"R2":[0.501503375,0.482413215625,0.519115959375],"R2b_cal":[0.5121051249999999,0.494712590625,0.5286845812500001],"R2b_dr":[0.5125835,0.495391775,0.53005758125],"R2c":[0.5116222500000001,0.494586778125,0.5296876125000001],"U1":0.8612258635133513},{"group":"dpsynth_eps8","eps":8.0,"seed":42,"R2":[0.49476149999999997,0.47569794687499994,0.512629296875],"R2b_cal":[0.508763,0.492232515625,0.5253139062500001],"R2b_dr":[0.519308,0.5011792718750001,0.5368698749999999],"R2c":[0.519245875,0.50181421875,0.5358101468750001],"U1":0.8802530861718406},{"group":"dpsynth_eps8","eps":8.0,"seed":43,"R2":[0.503266625,0.48605489999999996,0.521563334375],"R2b_cal":[0.51007375,0.491538984375,0.5279290031250001],"R2b_dr":[0.510321,0.49243299375000005,0.528768596875],"R2c":[0.49939262500000003,0.48161404687500003,0.5169391249999999],"U1":0.892054227649352},{"group":"dpsynth_eps8","eps":8.0,"seed":44,"R2":[0.5062418750000001,0.488948753125,0.5242747125],"R2b_cal":[0.5093132499999999,0.490804059375,0.5267389031249999],"R2b_dr":[0.506756375,0.48936652812500003,0.524361478125],"R2c":[0.521048875,0.50151866875,0.5388183281250001],"U1":0.8857083859989128},{"group":"pasynth_eps0.5","eps":0.5,"seed":42,"R2":[0.500629125,0.482432803125,0.5187794437500001],"R2b_cal":[0.5049414999999999,0.48664056875,0.52307563125],"R2b_dr":[0.498077625,0.480231571875,0.5156398687499999],"R2c":[0.5093650000000001,0.492285946875,0.526884025],"U1":0.8505527887964287},{"group":"pasynth_eps0.5","eps":0.5,"seed":43,"R2":[0.502571875,0.48571101250000004,0.5198248531249999],"R2b_cal":[0.5128215,0.49507792812500007,0.5298573562500001],"R2b_dr":[0.5057272500000001,0.487960878125,0.522820290625],"R2c":[0.49028475000000005,0.47074450937500006,0.508611340625],"U1":0.8472280635441932},{"group":"pasynth_eps0.5","eps":0.5,"seed":44,"R2":[0.505923625,0.48776285625,0.524149375],"R2b_cal":[0.5190565,0.5016253500000001,0.537949259375],"R2b_dr":[0.5025905,0.4857262125,0.5206517875],"R2c":[0.5047915000000001,0.48668934687500004,0.522885734375],"U1":0.8080887742187421}],"reid":{"naive":{"2_1":{"rate":0.0003541860362155222,"excess_pp":0.03541860362155222,"ci":[0.013281976358082084,0.06198255633771639],"n":22587,"succ":8},"3_1":{"rate":0.03665825474830655,"excess_pp":3.6481169570335945,"ci":[3.4090421568016613,3.9049014412829903],"n":22587,"succ":828},"4_1":{"rate":0.08314517200159384,"excess_pp":8.261391646768203,"ci":[7.893923212787227,8.611150396731716],"n":22587,"succ":1878},"5_1":{"rate":0.19737016868109974,"excess_pp":19.418263547762887,"ci":[18.913436292993733,19.985290883475184],"n":22587,"succ":4458},"2_10":{"rate":0.0,"excess_pp":0.0,"ci":[0.0,0.0],"n":22587,"succ":0},"3_10":{"rate":0.004604418470801789,"excess_pp":0.4604418470801789,"ci":[0.37632266347899235,0.5490990392703766],"n":22587,"succ":104},"4_10":{"rate":0.03395758622216319,"excess_pp":3.3869043633177887,"ci":[3.1389737459600657,3.6215522301038856],"n":22587,"succ":767},"5_10":{"rate":0.07933767211227698,"excess_pp":7.889495916735047,"ci":[7.535198805376349,8.243903672029374],"n":22587,"succ":1792}},"kanon_k5":{"2_1":{"rate":0.0,"excess_pp":0.0,"ci":[0.0,0.0],"n":22587,"succ":0},"3_1":{"rate":0.0,"excess_pp":0.0,"ci":[0.0,0.0],"n":22587,"succ":0},"4_1":{"rate":0.0,"excess_pp":0.0,"ci":[0.0,0.0],"n":22587,"succ":0},"5_1":{"rate":0.0,"excess_pp":0.0,"ci":[0.0,0.0],"n":22587,"succ":0},"2_10":{"rate":0.0,"excess_pp":0.0,"ci":[0.0,0.0],"n":22587,"succ":0},"3_10":{"rate":0.0,"excess_pp":0.0,"ci":[0.0,0.0],"n":22587,"succ":0},"4_10":{"rate":0.0,"excess_pp":0.0,"ci":[0.0,0.0],"n":22587,"succ":0},"5_10":{"rate":0.0,"excess_pp":0.0,"ci":[0.0,0.0],"n":22587,"succ":0}},"kanon_k10":{"2_1":{"rate":0.0,"excess_pp":0.0,"ci":[0.0,0.0],"n":22587,"succ":0},"3_1":{"rate":0.0,"excess_pp":0.0,"ci":[0.0,0.0],"n":22587,"succ":0},"4_1":{"rate":0.0,"excess_pp":0.0,"ci":[0.0,0.0],"n":22587,"succ":0},"5_1":{"rate":0.0,"excess_pp":0.0,"ci":[0.0,0.0],"n":22587,"succ":0},"2_10":{"rate":0.0,"excess_pp":0.0,"ci":[0.0,0.0],"n":22587,"succ":0},"3_10":{"rate":0.0,"excess_pp":0.0,"ci":[0.0,0.0],"n":22587,"succ":0},"4_10":{"rate":0.0,"excess_pp":0.0,"ci":[0.0,0.0],"n":22587,"succ":0},"5_10":{"rate":0.0,"excess_pp":0.0,"ci":[0.0,0.0],"n":22587,"succ":0}},"dpsynth_eps0.5":{"2_1":{"rate":0.0,"excess_pp":0.0,"ci":[0.0,0.0],"n":22587,"succ":0},"3_1":{"rate":0.0,"excess_pp":0.0,"ci":[0.0,0.0],"n":22587,"succ":0},"4_1":{"rate":0.0,"excess_pp":0.0,"ci":[0.0,0.0],"n":22587,"succ":0},"5_1":{"rate":0.00159383716296985,"excess_pp":0.07084112731168306,"ci":[-0.004422239163713275,0.15064322758877774],"n":22587,"succ":36},"2_10":{"rate":0.0,"excess_pp":0.0,"ci":[0.0,0.0],"n":22587,"succ":0},"3_10":{"rate":0.0,"excess_pp":0.0,"ci":[0.0,0.0],"n":22587,"succ":0},"4_10":{"rate":0.0,"excess_pp":0.0,"ci":[0.0,0.0],"n":22587,"succ":0},"5_10":{"rate":4.4273254526940277e-05,"excess_pp":-0.004426933445836165,"ci":[-0.026562776695590578,0.013281976358082084],"n":22587,"succ":1}},"dpsynth_eps2":{"2_1":{"rate":0.0,"excess_pp":0.0,"ci":[0.0,0.0],"n":22587,"succ":0},"3_1":{"rate":0.0,"excess_pp":0.0,"ci":[0.0,0.0],"n":22587,"succ":0},"4_1":{"rate":0.0001770930181077611,"excess_pp":0.008855042912245918,"ci":[-0.017708125790202527,0.030991670175716055],"n":22587,"succ":4},"5_1":{"rate":0.0033204940895205206,"excess_pp":-0.06639224148180661,"ci":[-0.20817492826215692,0.05768038887456617],"n":22587,"succ":75},"2_10":{"rate":0.0,"excess_pp":0.0,"ci":[0.0,0.0],"n":22587,"succ":0},"3_10":{"rate":0.0,"excess_pp":0.0,"ci":[0.0,0.0],"n":22587,"succ":0},"4_10":{"rate":0.0,"excess_pp":0.0,"ci":[0.0,0.0],"n":22587,"succ":0},"5_10":{"rate":0.00013281976358082084,"excess_pp":0.004427717459551891,"ci":[-0.022135059236038687,0.026563952716164168],"n":22587,"succ":3}},"dpsynth_eps8":{"2_1":{"rate":0.0,"excess_pp":0.0,"ci":[0.0,0.0],"n":22587,"succ":0},"3_1":{"rate":4.4273254526940277e-05,"excess_pp":-0.004426933445836165,"ci":[-0.026562776695590578,0.008854660705559502],"n":22587,"succ":1},"4_1":{"rate":0.00022136627263470138,"excess_pp":-0.022134667229180827,"ci":[-0.0664059617218318,0.017710085824491836],"n":22587,"succ":5},"5_1":{"rate":0.0024793022535086555,"excess_pp":-0.05311457719916102,"ci":[-0.16822232432171505,0.07084544918729098],"n":22587,"succ":56},"2_10":{"rate":0.0,"excess_pp":0.0,"ci":[0.0,0.0],"n":22587,"succ":0},"3_10":{"rate":0.0,"excess_pp":0.0,"ci":[0.0,0.0],"n":22587,"succ":0},"4_10":{"rate":0.0,"excess_pp":0.0,"ci":[0.0,0.0],"n":22587,"succ":0},"5_10":{"rate":0.00022136627263470138,"excess_pp":0.013282368364939944,"ci":[-0.013281192344366359,0.03984592907424625],"n":22587,"succ":5}},"pasynth_eps0.5":{"2_1":{"rate":0.0,"excess_pp":0.0,"ci":[0.0,0.0],"n":22587,"succ":0},"3_1":{"rate":0.0,"excess_pp":-0.008854258898530193,"ci":[-0.026562776695590578,0.0],"n":22587,"succ":0},"4_1":{"rate":0.0,"excess_pp":-0.017708517797060386,"ci":[-0.053125553391181156,0.0],"n":22587,"succ":0},"5_1":{"rate":0.0011953778722273874,"excess_pp":0.004432421541846225,"ci":[-0.07968364560482027,0.07526689453711709],"n":22587,"succ":27},"2_10":{"rate":0.0,"excess_pp":0.0,"ci":[0.0,0.0],"n":22587,"succ":0},"3_10":{"rate":0.0,"excess_pp":0.0,"ci":[0.0,0.0],"n":22587,"succ":0},"4_10":{"rate":0.0,"excess_pp":-0.008854258898530193,"ci":[-0.03541703559412077,0.0],"n":22587,"succ":0},"5_10":{"rate":0.0,"excess_pp":-0.008854258898530193,"ci":[-0.03541703559412077,0.0],"n":22587,"succ":0}}},"funnel":{"attr_zh":{"age":"年齡","workclass":"雇用類型","education_num":"教育程度","marital_status":"婚姻狀況","occupation":"職業類別","relationship":"家庭角色","race":"種族","sex":"性別","capital_gain":"資本利得","capital_loss":"資本損失","hours_per_week":"每週工時","native_country":"出生國籍","income":"年收入是否超過 5 萬美元"},"secrets":["race","marital_status","income"],"scenarios":{"2_42":{"k":2,"seed":42,"n_candidates":8,"n_train":22587,"known":[["age","87"],["sex","Male"]],"truth":{"race":"White","marital_status":"Married-spouse-absent","income":"0"},"releases":{"naive":{"n":22587,"stages":[1,1],"full_match":1,"unique":{"race":"White","marital_status":"Married-spouse-absent","income":"0"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,14755],"full_match":1,"spread":[["White",13200],["Black",1005],["Asian-Pac-Islander",322],["Amer-Indian-Eskimo",135],["Other",93]]},"kanon_k10":{"n":21654,"stages":[21654,14689],"full_match":1,"spread":[["White",13178],["Black",1004],["Asian-Pac-Islander",283],["Amer-Indian-Eskimo",136],["Other",88]]},"dpsynth_eps0.5":{"n":22587,"stages":[13,7],"full_match":0,"spread":[["White",6],["Black",1]]},"dpsynth_eps2":{"n":22587,"stages":[12,8],"full_match":0,"spread":[["White",7],["Black",1]]},"dpsynth_eps8":{"n":22587,"stages":[6,4],"full_match":0,"spread":[["White",4]]},"pasynth_eps0.5":{"n":22587,"stages":[19,16],"full_match":0,"spread":[["White",14],["Asian-Pac-Islander",1],["Black",1]]}}},"2_43":{"k":2,"seed":43,"n_candidates":8,"n_train":22587,"known":[["age","84"],["sex","Female"]],"truth":{"race":"White","marital_status":"Widowed","income":"0"},"releases":{"naive":{"n":22587,"stages":[4,1],"full_match":1,"unique":{"race":"White","marital_status":"Widowed","income":"0"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,6989],"full_match":1,"spread":[["White",5713],["Black",999],["Asian-Pac-Islander",159],["Amer-Indian-Eskimo",71],["Other",47]]},"kanon_k10":{"n":21654,"stages":[21654,6965],"full_match":1,"spread":[["White",5711],["Black",1009],["Asian-Pac-Islander",128],["Amer-Indian-Eskimo",71],["Other",46]]},"dpsynth_eps0.5":{"n":22587,"stages":[3,0],"full_match":0},"dpsynth_eps2":{"n":22587,"stages":[20,4],"full_match":0,"spread":[["White",3],["Black",1]]},"dpsynth_eps8":{"n":22587,"stages":[14,6],"full_match":0,"spread":[["White",5],["Black",1]]},"pasynth_eps0.5":{"n":22587,"stages":[20,4],"full_match":0,"spread":[["White",3],["Black",1]]}}},"2_44":{"k":2,"seed":44,"n_candidates":8,"n_train":22587,"known":[["age","82"],["sex","Female"]],"truth":{"race":"White","marital_status":"Widowed","income":"0"},"releases":{"naive":{"n":22587,"stages":[5,1],"full_match":1,"unique":{"race":"White","marital_status":"Widowed","income":"0"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,6989],"full_match":0,"spread":[["White",5713],["Black",999],["Asian-Pac-Islander",159],["Amer-Indian-Eskimo",71],["Other",47]]},"kanon_k10":{"n":21654,"stages":[21654,6965],"full_match":2,"spread":[["White",5711],["Black",1009],["Asian-Pac-Islander",128],["Amer-Indian-Eskimo",71],["Other",46]]},"dpsynth_eps0.5":{"n":22587,"stages":[24,7],"full_match":0,"spread":[["White",7]]},"dpsynth_eps2":{"n":22587,"stages":[16,7],"full_match":0,"spread":[["White",5],["Black",1],["Amer-Indian-Eskimo",1]]},"dpsynth_eps8":{"n":22587,"stages":[4,0],"full_match":0},"pasynth_eps0.5":{"n":22587,"stages":[44,6],"full_match":0,"spread":[["White",5],["Other",1]]}}},"2_45":{"k":2,"seed":45,"n_candidates":8,"n_train":22587,"known":[["age","79"],["sex","Female"]],"truth":{"race":"White","marital_status":"Widowed","income":"0"},"releases":{"naive":{"n":22587,"stages":[12,1],"full_match":1,"unique":{"race":"White","marital_status":"Widowed","income":"0"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,6989],"full_match":1,"spread":[["White",5713],["Black",999],["Asian-Pac-Islander",159],["Amer-Indian-Eskimo",71],["Other",47]]},"kanon_k10":{"n":21654,"stages":[21654,6965],"full_match":1,"spread":[["White",5711],["Black",1009],["Asian-Pac-Islander",128],["Amer-Indian-Eskimo",71],["Other",46]]},"dpsynth_eps0.5":{"n":22587,"stages":[6,3],"full_match":0,"spread":[["White",2],["Black",1]]},"dpsynth_eps2":{"n":22587,"stages":[18,12],"full_match":0,"spread":[["White",7],["Black",3],["Other",1],["Asian-Pac-Islander",1]]},"dpsynth_eps8":{"n":22587,"stages":[11,5],"full_match":0,"spread":[["White",5]]},"pasynth_eps0.5":{"n":22587,"stages":[2,1],"full_match":0,"unique":{"race":"White","marital_status":"Never-married","income":"0"},"is_real_record":false,"all_equal":false}}},"2_46":{"k":2,"seed":46,"n_candidates":8,"n_train":22587,"known":[["age","84"],["sex","Female"]],"truth":{"race":"White","marital_status":"Widowed","income":"0"},"releases":{"naive":{"n":22587,"stages":[4,1],"full_match":1,"unique":{"race":"White","marital_status":"Widowed","income":"0"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,6989],"full_match":1,"spread":[["White",5713],["Black",999],["Asian-Pac-Islander",159],["Amer-Indian-Eskimo",71],["Other",47]]},"kanon_k10":{"n":21654,"stages":[21654,6965],"full_match":1,"spread":[["White",5711],["Black",1009],["Asian-Pac-Islander",128],["Amer-Indian-Eskimo",71],["Other",46]]},"dpsynth_eps0.5":{"n":22587,"stages":[3,0],"full_match":0},"dpsynth_eps2":{"n":22587,"stages":[20,4],"full_match":0,"spread":[["White",3],["Black",1]]},"dpsynth_eps8":{"n":22587,"stages":[14,6],"full_match":0,"spread":[["White",5],["Black",1]]},"pasynth_eps0.5":{"n":22587,"stages":[20,4],"full_match":0,"spread":[["White",3],["Black",1]]}}},"2_47":{"k":2,"seed":47,"n_candidates":8,"n_train":22587,"known":[["age","87"],["sex","Male"]],"truth":{"race":"White","marital_status":"Married-spouse-absent","income":"0"},"releases":{"naive":{"n":22587,"stages":[1,1],"full_match":1,"unique":{"race":"White","marital_status":"Married-spouse-absent","income":"0"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,14755],"full_match":1,"spread":[["White",13200],["Black",1005],["Asian-Pac-Islander",322],["Amer-Indian-Eskimo",135],["Other",93]]},"kanon_k10":{"n":21654,"stages":[21654,14689],"full_match":1,"spread":[["White",13178],["Black",1004],["Asian-Pac-Islander",283],["Amer-Indian-Eskimo",136],["Other",88]]},"dpsynth_eps0.5":{"n":22587,"stages":[13,7],"full_match":0,"spread":[["White",6],["Black",1]]},"dpsynth_eps2":{"n":22587,"stages":[12,8],"full_match":0,"spread":[["White",7],["Black",1]]},"dpsynth_eps8":{"n":22587,"stages":[6,4],"full_match":0,"spread":[["White",4]]},"pasynth_eps0.5":{"n":22587,"stages":[19,16],"full_match":0,"spread":[["White",14],["Asian-Pac-Islander",1],["Black",1]]}}},"2_48":{"k":2,"seed":48,"n_candidates":8,"n_train":22587,"known":[["age","83"],["sex","Female"]],"truth":{"race":"White","marital_status":"Never-married","income":"0"},"releases":{"naive":{"n":22587,"stages":[4,1],"full_match":1,"unique":{"race":"White","marital_status":"Never-married","income":"0"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,6989],"full_match":10,"spread":[["White",5713],["Black",999],["Asian-Pac-Islander",159],["Amer-Indian-Eskimo",71],["Other",47]]},"kanon_k10":{"n":21654,"stages":[21654,6965],"full_match":10,"spread":[["White",5711],["Black",1009],["Asian-Pac-Islander",128],["Amer-Indian-Eskimo",71],["Other",46]]},"dpsynth_eps0.5":{"n":22587,"stages":[24,10],"full_match":0,"spread":[["White",5],["Black",3],["Amer-Indian-Eskimo",1],["Asian-Pac-Islander",1]]},"dpsynth_eps2":{"n":22587,"stages":[14,6],"full_match":0,"spread":[["White",6]]},"dpsynth_eps8":{"n":22587,"stages":[5,2],"full_match":0,"spread":[["White",1],["Black",1]]},"pasynth_eps0.5":{"n":22587,"stages":[31,12],"full_match":1,"spread":[["White",9],["Asian-Pac-Islander",2],["Black",1]]}}},"2_49":{"k":2,"seed":49,"n_candidates":8,"n_train":22587,"known":[["age","87"],["sex","Male"]],"truth":{"race":"White","marital_status":"Married-spouse-absent","income":"0"},"releases":{"naive":{"n":22587,"stages":[1,1],"full_match":1,"unique":{"race":"White","marital_status":"Married-spouse-absent","income":"0"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,14755],"full_match":1,"spread":[["White",13200],["Black",1005],["Asian-Pac-Islander",322],["Amer-Indian-Eskimo",135],["Other",93]]},"kanon_k10":{"n":21654,"stages":[21654,14689],"full_match":1,"spread":[["White",13178],["Black",1004],["Asian-Pac-Islander",283],["Amer-Indian-Eskimo",136],["Other",88]]},"dpsynth_eps0.5":{"n":22587,"stages":[13,7],"full_match":0,"spread":[["White",6],["Black",1]]},"dpsynth_eps2":{"n":22587,"stages":[12,8],"full_match":0,"spread":[["White",7],["Black",1]]},"dpsynth_eps8":{"n":22587,"stages":[6,4],"full_match":0,"spread":[["White",4]]},"pasynth_eps0.5":{"n":22587,"stages":[19,16],"full_match":0,"spread":[["White",14],["Asian-Pac-Islander",1],["Black",1]]}}},"2_50":{"k":2,"seed":50,"n_candidates":8,"n_train":22587,"known":[["age","78"],["sex","Female"]],"truth":{"race":"White","marital_status":"Never-married","income":"0"},"releases":{"naive":{"n":22587,"stages":[4,1],"full_match":1,"unique":{"race":"White","marital_status":"Never-married","income":"0"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,6989],"full_match":1,"spread":[["White",5713],["Black",999],["Asian-Pac-Islander",159],["Amer-Indian-Eskimo",71],["Other",47]]},"kanon_k10":{"n":21654,"stages":[21654,6965],"full_match":1,"spread":[["White",5711],["Black",1009],["Asian-Pac-Islander",128],["Amer-Indian-Eskimo",71],["Other",46]]},"dpsynth_eps0.5":{"n":22587,"stages":[21,10],"full_match":0,"spread":[["White",7],["Black",2],["Asian-Pac-Islander",1]]},"dpsynth_eps2":{"n":22587,"stages":[15,3],"full_match":0,"spread":[["White",3]]},"dpsynth_eps8":{"n":22587,"stages":[4,2],"full_match":0,"spread":[["White",2]]},"pasynth_eps0.5":{"n":22587,"stages":[30,5],"full_match":0,"spread":[["White",5]]}}},"2_51":{"k":2,"seed":51,"n_candidates":8,"n_train":22587,"known":[["age","85"],["sex","Female"]],"truth":{"race":"White","marital_status":"Widowed","income":"0"},"releases":{"naive":{"n":22587,"stages":[3,1],"full_match":1,"unique":{"race":"White","marital_status":"Widowed","income":"0"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,6989],"full_match":1,"spread":[["White",5713],["Black",999],["Asian-Pac-Islander",159],["Amer-Indian-Eskimo",71],["Other",47]]},"kanon_k10":{"n":21654,"stages":[21654,6965],"full_match":1,"spread":[["White",5711],["Black",1009],["Asian-Pac-Islander",128],["Amer-Indian-Eskimo",71],["Other",46]]},"dpsynth_eps0.5":{"n":22587,"stages":[1,0],"full_match":0},"dpsynth_eps2":{"n":22587,"stages":[13,6],"full_match":0,"spread":[["White",5],["Black",1]]},"dpsynth_eps8":{"n":22587,"stages":[7,2],"full_match":0,"spread":[["White",2]]},"pasynth_eps0.5":{"n":22587,"stages":[32,11],"full_match":0,"spread":[["White",9],["Black",2]]}}},"2_52":{"k":2,"seed":52,"n_candidates":8,"n_train":22587,"known":[["age","79"],["sex","Female"]],"truth":{"race":"White","marital_status":"Widowed","income":"0"},"releases":{"naive":{"n":22587,"stages":[12,1],"full_match":1,"unique":{"race":"White","marital_status":"Widowed","income":"0"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,6989],"full_match":1,"spread":[["White",5713],["Black",999],["Asian-Pac-Islander",159],["Amer-Indian-Eskimo",71],["Other",47]]},"kanon_k10":{"n":21654,"stages":[21654,6965],"full_match":1,"spread":[["White",5711],["Black",1009],["Asian-Pac-Islander",128],["Amer-Indian-Eskimo",71],["Other",46]]},"dpsynth_eps0.5":{"n":22587,"stages":[6,3],"full_match":0,"spread":[["White",2],["Black",1]]},"dpsynth_eps2":{"n":22587,"stages":[18,12],"full_match":0,"spread":[["White",7],["Black",3],["Other",1],["Asian-Pac-Islander",1]]},"dpsynth_eps8":{"n":22587,"stages":[11,5],"full_match":0,"spread":[["White",5]]},"pasynth_eps0.5":{"n":22587,"stages":[2,1],"full_match":0,"unique":{"race":"White","marital_status":"Never-married","income":"0"},"is_real_record":false,"all_equal":false}}},"2_53":{"k":2,"seed":53,"n_candidates":8,"n_train":22587,"known":[["age","78"],["sex","Female"]],"truth":{"race":"White","marital_status":"Never-married","income":"0"},"releases":{"naive":{"n":22587,"stages":[4,1],"full_match":1,"unique":{"race":"White","marital_status":"Never-married","income":"0"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,6989],"full_match":1,"spread":[["White",5713],["Black",999],["Asian-Pac-Islander",159],["Amer-Indian-Eskimo",71],["Other",47]]},"kanon_k10":{"n":21654,"stages":[21654,6965],"full_match":1,"spread":[["White",5711],["Black",1009],["Asian-Pac-Islander",128],["Amer-Indian-Eskimo",71],["Other",46]]},"dpsynth_eps0.5":{"n":22587,"stages":[21,10],"full_match":0,"spread":[["White",7],["Black",2],["Asian-Pac-Islander",1]]},"dpsynth_eps2":{"n":22587,"stages":[15,3],"full_match":0,"spread":[["White",3]]},"dpsynth_eps8":{"n":22587,"stages":[4,2],"full_match":0,"spread":[["White",2]]},"pasynth_eps0.5":{"n":22587,"stages":[30,5],"full_match":0,"spread":[["White",5]]}}},"3_42":{"k":3,"seed":42,"n_candidates":828,"n_train":22587,"known":[["age","29"],["sex","Male"],["native_country","Japan"]],"truth":{"race":"Asian-Pac-Islander","marital_status":"Never-married","income":"0"},"releases":{"naive":{"n":22587,"stages":[565,378,1],"full_match":1,"unique":{"race":"Asian-Pac-Islander","marital_status":"Never-married","income":"0"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,14755,242],"full_match":1,"spread":[["Asian-Pac-Islander",201],["White",31],["Other",8],["Black",1],["Amer-Indian-Eskimo",1]]},"kanon_k10":{"n":21654,"stages":[21654,14689,195],"full_match":1,"spread":[["Asian-Pac-Islander",161],["White",26],["Other",6],["Black",1],["Amer-Indian-Eskimo",1]]},"dpsynth_eps0.5":{"n":22587,"stages":[590,376,1],"full_match":0,"unique":{"race":"White","marital_status":"Married-civ-spouse","income":"0"},"is_real_record":false,"all_equal":false},"dpsynth_eps2":{"n":22587,"stages":[572,382,0],"full_match":0},"dpsynth_eps8":{"n":22587,"stages":[555,376,0],"full_match":0},"pasynth_eps0.5":{"n":22587,"stages":[600,428,1],"full_match":0,"unique":{"race":"White","marital_status":"Never-married","income":"1"},"is_real_record":false,"all_equal":false}}},"3_43":{"k":3,"seed":43,"n_candidates":828,"n_train":22587,"known":[["age","29"],["sex","Male"],["native_country","Outlying-US(Guam-USVI-etc)"]],"truth":{"race":"Black","marital_status":"Never-married","income":"0"},"releases":{"naive":{"n":22587,"stages":[565,378,1],"full_match":1,"unique":{"race":"Black","marital_status":"Never-married","income":"0"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,14755,13818],"full_match":1,"spread":[["White",12571],["Black",951],["Amer-Indian-Eskimo",130],["Asian-Pac-Islander",118],["Other",48]]},"kanon_k10":{"n":21654,"stages":[21654,14689,13867],"full_match":1,"spread":[["White",12610],["Black",960],["Amer-Indian-Eskimo",131],["Asian-Pac-Islander",118],["Other",48]]},"dpsynth_eps0.5":{"n":22587,"stages":[590,376,1],"full_match":0,"unique":{"race":"White","marital_status":"Married-civ-spouse","income":"0"},"is_real_record":false,"all_equal":false},"dpsynth_eps2":{"n":22587,"stages":[572,382,0],"full_match":0},"dpsynth_eps8":{"n":22587,"stages":[555,376,0],"full_match":0},"pasynth_eps0.5":{"n":22587,"stages":[600,428,2],"full_match":0,"spread":[["Black",1],["White",1]]}}},"3_44":{"k":3,"seed":44,"n_candidates":828,"n_train":22587,"known":[["age","24"],["sex","Female"],["native_country","Portugal"]],"truth":{"race":"White","marital_status":"Separated","income":"1"},"releases":{"naive":{"n":22587,"stages":[567,220,1],"full_match":1,"unique":{"race":"White","marital_status":"Separated","income":"1"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,6989,50],"full_match":1,"spread":[["White",46],["Black",3],["Asian-Pac-Islander",1]]},"kanon_k10":{"n":21654,"stages":[21654,6965,12],"full_match":0,"spread":[["White",11],["Black",1]]},"dpsynth_eps0.5":{"n":22587,"stages":[492,168,0],"full_match":0},"dpsynth_eps2":{"n":22587,"stages":[601,271,2],"full_match":0,"spread":[["White",2]]},"dpsynth_eps8":{"n":22587,"stages":[562,211,0],"full_match":0},"pasynth_eps0.5":{"n":22587,"stages":[474,201,1],"full_match":0,"unique":{"race":"White","marital_status":"Divorced","income":"0"},"is_real_record":false,"all_equal":false}}},"3_45":{"k":3,"seed":45,"n_candidates":828,"n_train":22587,"known":[["age","30"],["sex","Male"],["native_country","Poland"]],"truth":{"race":"White","marital_status":"Married-civ-spouse","income":"0"},"releases":{"naive":{"n":22587,"stages":[580,405,1],"full_match":1,"unique":{"race":"White","marital_status":"Married-civ-spouse","income":"0"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,14755,145],"full_match":1,"spread":[["White",139],["Black",5],["Asian-Pac-Islander",1]]},"kanon_k10":{"n":21654,"stages":[21654,14689,99],"full_match":0,"spread":[["White",95],["Black",3],["Asian-Pac-Islander",1]]},"dpsynth_eps0.5":{"n":22587,"stages":[579,381,1],"full_match":0,"unique":{"race":"White","marital_status":"Never-married","income":"0"},"is_real_record":false,"all_equal":false},"dpsynth_eps2":{"n":22587,"stages":[556,368,1],"full_match":0,"unique":{"race":"White","marital_status":"Married-civ-spouse","income":"0"},"is_real_record":false,"all_equal":false},"dpsynth_eps8":{"n":22587,"stages":[558,377,1],"full_match":0,"unique":{"race":"White","marital_status":"Married-civ-spouse","income":"1"},"is_real_record":false,"all_equal":false},"pasynth_eps0.5":{"n":22587,"stages":[573,378,1],"full_match":0,"unique":{"race":"White","marital_status":"Married-civ-spouse","income":"0"},"is_real_record":false,"all_equal":false}}},"3_46":{"k":3,"seed":46,"n_candidates":828,"n_train":22587,"known":[["age","44"],["sex","Male"],["native_country","Columbia"]],"truth":{"race":"White","marital_status":"Married-spouse-absent","income":"0"},"releases":{"naive":{"n":22587,"stages":[534,392,1],"full_match":1,"unique":{"race":"White","marital_status":"Married-spouse-absent","income":"0"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,14755,550],"full_match":1,"spread":[["White",459],["Black",48],["Other",37],["Amer-Indian-Eskimo",4],["Asian-Pac-Islander",2]]},"kanon_k10":{"n":21654,"stages":[21654,14689,528],"full_match":1,"spread":[["White",447],["Black",40],["Other",34],["Amer-Indian-Eskimo",4],["Asian-Pac-Islander",3]]},"dpsynth_eps0.5":{"n":22587,"stages":[553,376,0],"full_match":0},"dpsynth_eps2":{"n":22587,"stages":[494,363,0],"full_match":0},"dpsynth_eps8":{"n":22587,"stages":[582,411,0],"full_match":0},"pasynth_eps0.5":{"n":22587,"stages":[564,388,2],"full_match":0,"spread":[["White",2]]}}},"3_47":{"k":3,"seed":47,"n_candidates":828,"n_train":22587,"known":[["age","18"],["sex","Male"],["native_country","Jamaica"]],"truth":{"race":"Black","marital_status":"Married-spouse-absent","income":"0"},"releases":{"naive":{"n":22587,"stages":[355,182,1],"full_match":1,"unique":{"race":"Black","marital_status":"Married-spouse-absent","income":"0"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,14755,550],"full_match":1,"spread":[["White",459],["Black",48],["Other",37],["Amer-Indian-Eskimo",4],["Asian-Pac-Islander",2]]},"kanon_k10":{"n":21654,"stages":[21654,14689,528],"full_match":1,"spread":[["White",447],["Black",40],["Other",34],["Amer-Indian-Eskimo",4],["Asian-Pac-Islander",3]]},"dpsynth_eps0.5":{"n":22587,"stages":[360,247,0],"full_match":0},"dpsynth_eps2":{"n":22587,"stages":[367,184,0],"full_match":0},"dpsynth_eps8":{"n":22587,"stages":[354,176,0],"full_match":0},"pasynth_eps0.5":{"n":22587,"stages":[349,218,1],"full_match":0,"unique":{"race":"White","marital_status":"Never-married","income":"0"},"is_real_record":false,"all_equal":false}}},"3_48":{"k":3,"seed":48,"n_candidates":828,"n_train":22587,"known":[["age","53"],["sex","Male"],["native_country","Yugoslavia"]],"truth":{"race":"White","marital_status":"Married-civ-spouse","income":"1"},"releases":{"naive":{"n":22587,"stages":[362,257,1],"full_match":1,"unique":{"race":"White","marital_status":"Married-civ-spouse","income":"1"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,14755,145],"full_match":1,"spread":[["White",139],["Black",5],["Asian-Pac-Islander",1]]},"kanon_k10":{"n":21654,"stages":[21654,14689,99],"full_match":1,"spread":[["White",95],["Black",3],["Asian-Pac-Islander",1]]},"dpsynth_eps0.5":{"n":22587,"stages":[325,217,1],"full_match":0,"unique":{"race":"White","marital_status":"Married-civ-spouse","income":"1"},"is_real_record":false,"all_equal":false},"dpsynth_eps2":{"n":22587,"stages":[363,270,0],"full_match":0},"dpsynth_eps8":{"n":22587,"stages":[354,238,0],"full_match":0},"pasynth_eps0.5":{"n":22587,"stages":[361,239,1],"full_match":0,"unique":{"race":"White","marital_status":"Married-civ-spouse","income":"1"},"is_real_record":false,"all_equal":false}}},"3_49":{"k":3,"seed":49,"n_candidates":828,"n_train":22587,"known":[["age","30"],["sex","Male"],["native_country","Laos"]],"truth":{"race":"Asian-Pac-Islander","marital_status":"Married-civ-spouse","income":"0"},"releases":{"naive":{"n":22587,"stages":[580,405,1],"full_match":1,"unique":{"race":"Asian-Pac-Islander","marital_status":"Married-civ-spouse","income":"0"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,14755,242],"full_match":3,"spread":[["Asian-Pac-Islander",201],["White",31],["Other",8],["Black",1],["Amer-Indian-Eskimo",1]]},"kanon_k10":{"n":21654,"stages":[21654,14689,195],"full_match":3,"spread":[["Asian-Pac-Islander",161],["White",26],["Other",6],["Black",1],["Amer-Indian-Eskimo",1]]},"dpsynth_eps0.5":{"n":22587,"stages":[579,381,1],"full_match":0,"unique":{"race":"White","marital_status":"Never-married","income":"0"},"is_real_record":false,"all_equal":false},"dpsynth_eps2":{"n":22587,"stages":[556,368,1],"full_match":0,"unique":{"race":"Other","marital_status":"Divorced","income":"0"},"is_real_record":false,"all_equal":false},"dpsynth_eps8":{"n":22587,"stages":[558,377,0],"full_match":0},"pasynth_eps0.5":{"n":22587,"stages":[573,378,0],"full_match":0}}},"3_50":{"k":3,"seed":50,"n_candidates":828,"n_train":22587,"known":[["age","39"],["sex","Female"],["native_country","Haiti"]],"truth":{"race":"Black","marital_status":"Never-married","income":"0"},"releases":{"naive":{"n":22587,"stages":[576,186,1],"full_match":1,"unique":{"race":"Black","marital_status":"Never-married","income":"0"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,6989,190],"full_match":0,"spread":[["White",136],["Black",39],["Other",14],["Asian-Pac-Islander",1]]},"kanon_k10":{"n":21654,"stages":[21654,6965,199],"full_match":1,"spread":[["White",146],["Black",38],["Other",14],["Asian-Pac-Islander",1]]},"dpsynth_eps0.5":{"n":22587,"stages":[540,167,0],"full_match":0},"dpsynth_eps2":{"n":22587,"stages":[576,163,0],"full_match":0},"dpsynth_eps8":{"n":22587,"stages":[604,193,1],"full_match":0,"unique":{"race":"Black","marital_status":"Never-married","income":"1"},"is_real_record":false,"all_equal":false},"pasynth_eps0.5":{"n":22587,"stages":[534,136,0],"full_match":0}}},"3_51":{"k":3,"seed":51,"n_candidates":828,"n_train":22587,"known":[["age","36"],["sex","Female"],["native_country","Iran"]],"truth":{"race":"White","marital_status":"Married-civ-spouse","income":"1"},"releases":{"naive":{"n":22587,"stages":[650,199,1],"full_match":1,"unique":{"race":"White","marital_status":"Married-civ-spouse","income":"1"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,6989,110],"full_match":1,"spread":[["Asian-Pac-Islander",97],["White",9],["Black",3],["Other",1]]},"kanon_k10":{"n":21654,"stages":[21654,6965,74],"full_match":1,"spread":[["Asian-Pac-Islander",65],["White",6],["Black",3]]},"dpsynth_eps0.5":{"n":22587,"stages":[609,205,0],"full_match":0},"dpsynth_eps2":{"n":22587,"stages":[616,172,0],"full_match":0},"dpsynth_eps8":{"n":22587,"stages":[643,225,0],"full_match":0},"pasynth_eps0.5":{"n":22587,"stages":[587,214,1],"full_match":0,"unique":{"race":"White","marital_status":"Never-married","income":"0"},"is_real_record":false,"all_equal":false}}},"3_52":{"k":3,"seed":52,"n_candidates":828,"n_train":22587,"known":[["age","53"],["sex","Male"],["native_country","Italy"]],"truth":{"race":"White","marital_status":"Married-civ-spouse","income":"0"},"releases":{"naive":{"n":22587,"stages":[362,257,1],"full_match":1,"unique":{"race":"White","marital_status":"Married-civ-spouse","income":"0"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,14755,145],"full_match":0,"spread":[["White",139],["Black",5],["Asian-Pac-Islander",1]]},"kanon_k10":{"n":21654,"stages":[21654,14689,99],"full_match":1,"spread":[["White",95],["Black",3],["Asian-Pac-Islander",1]]},"dpsynth_eps0.5":{"n":22587,"stages":[325,217,0],"full_match":0},"dpsynth_eps2":{"n":22587,"stages":[363,270,0],"full_match":0},"dpsynth_eps8":{"n":22587,"stages":[354,238,0],"full_match":0},"pasynth_eps0.5":{"n":22587,"stages":[361,239,4],"full_match":0,"spread":[["White",3],["Black",1]]}}},"3_53":{"k":3,"seed":53,"n_candidates":828,"n_train":22587,"known":[["age","29"],["sex","Male"],["native_country","South"]],"truth":{"race":"Asian-Pac-Islander","marital_status":"Married-civ-spouse","income":"0"},"releases":{"naive":{"n":22587,"stages":[565,378,1],"full_match":1,"unique":{"race":"Asian-Pac-Islander","marital_status":"Married-civ-spouse","income":"0"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,14755,242],"full_match":1,"spread":[["Asian-Pac-Islander",201],["White",31],["Other",8],["Black",1],["Amer-Indian-Eskimo",1]]},"kanon_k10":{"n":21654,"stages":[21654,14689,195],"full_match":1,"spread":[["Asian-Pac-Islander",161],["White",26],["Other",6],["Black",1],["Amer-Indian-Eskimo",1]]},"dpsynth_eps0.5":{"n":22587,"stages":[590,376,1],"full_match":0,"unique":{"race":"Black","marital_status":"Never-married","income":"0"},"is_real_record":false,"all_equal":false},"dpsynth_eps2":{"n":22587,"stages":[572,382,2],"full_match":0,"spread":[["Asian-Pac-Islander",2]]},"dpsynth_eps8":{"n":22587,"stages":[555,376,1],"full_match":0,"unique":{"race":"Asian-Pac-Islander","marital_status":"Never-married","income":"0"},"is_real_record":false,"all_equal":false},"pasynth_eps0.5":{"n":22587,"stages":[600,428,1],"full_match":0,"unique":{"race":"Asian-Pac-Islander","marital_status":"Married-civ-spouse","income":"0"},"is_real_record":false,"all_equal":false}}},"4_42":{"k":4,"seed":42,"n_candidates":1878,"n_train":22587,"known":[["age","57"],["sex","Female"],["native_country","Mexico"],["education_num","10"]],"truth":{"race":"White","marital_status":"Widowed","income":"0"},"releases":{"naive":{"n":22587,"stages":[286,72,1,1],"full_match":1,"unique":{"race":"White","marital_status":"Widowed","income":"0"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,6989,190,41],"full_match":2,"spread":[["White",25],["Black",12],["Other",3],["Asian-Pac-Islander",1]]},"kanon_k10":{"n":21654,"stages":[21654,6965,199,35],"full_match":2,"spread":[["White",20],["Black",11],["Other",3],["Asian-Pac-Islander",1]]},"dpsynth_eps0.5":{"n":22587,"stages":[259,101,0,0],"full_match":0},"dpsynth_eps2":{"n":22587,"stages":[265,64,2,0],"full_match":0},"dpsynth_eps8":{"n":22587,"stages":[286,70,1,0],"full_match":0},"pasynth_eps0.5":{"n":22587,"stages":[268,72,1,0],"full_match":0}}},"4_43":{"k":4,"seed":43,"n_candidates":1878,"n_train":22587,"known":[["age","61"],["sex","Female"],["native_country","Puerto-Rico"],["education_num","9"]],"truth":{"race":"White","marital_status":"Widowed","income":"0"},"releases":{"naive":{"n":22587,"stages":[200,66,1,1],"full_match":1,"unique":{"race":"White","marital_status":"Widowed","income":"0"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,6989,190,69],"full_match":0,"spread":[["White",48],["Black",16],["Other",5]]},"kanon_k10":{"n":21654,"stages":[21654,6965,199,52],"full_match":0,"spread":[["White",36],["Black",12],["Other",4]]},"dpsynth_eps0.5":{"n":22587,"stages":[211,71,1,0],"full_match":0},"dpsynth_eps2":{"n":22587,"stages":[203,52,0,0],"full_match":0},"dpsynth_eps8":{"n":22587,"stages":[203,62,0,0],"full_match":0},"pasynth_eps0.5":{"n":22587,"stages":[194,74,0,0],"full_match":0}}},"4_44":{"k":4,"seed":44,"n_candidates":1878,"n_train":22587,"known":[["age","37"],["sex","Female"],["native_country","United-States"],["education_num","4"]],"truth":{"race":"White","marital_status":"Divorced","income":"0"},"releases":{"naive":{"n":22587,"stages":[630,179,161,1],"full_match":1,"unique":{"race":"White","marital_status":"Divorced","income":"0"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,6989,6639,56],"full_match":0,"spread":[["White",39],["Black",14],["Amer-Indian-Eskimo",3]]},"kanon_k10":{"n":21654,"stages":[21654,6965,6680,672],"full_match":1,"spread":[["White",508],["Black",148],["Amer-Indian-Eskimo",7],["Other",5],["Asian-Pac-Islander",4]]},"dpsynth_eps0.5":{"n":22587,"stages":[613,219,194,0],"full_match":0},"dpsynth_eps2":{"n":22587,"stages":[597,188,172,2],"full_match":0,"spread":[["White",1],["Black",1]]},"dpsynth_eps8":{"n":22587,"stages":[636,171,157,1],"full_match":0,"unique":{"race":"White","marital_status":"Married-AF-spouse","income":"0"},"is_real_record":false,"all_equal":false},"pasynth_eps0.5":{"n":22587,"stages":[595,204,192,1],"full_match":0,"unique":{"race":"White","marital_status":"Divorced","income":"0"},"is_real_record":false,"all_equal":false}}},"4_45":{"k":4,"seed":45,"n_candidates":1878,"n_train":22587,"known":[["age","44"],["sex","Female"],["native_country","Vietnam"],["education_num","2"]],"truth":{"race":"Asian-Pac-Islander","marital_status":"Married-civ-spouse","income":"0"},"releases":{"naive":{"n":22587,"stages":[534,142,1,1],"full_match":1,"unique":{"race":"Asian-Pac-Islander","marital_status":"Married-civ-spouse","income":"0"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,6989,110,0],"full_match":0},"kanon_k10":{"n":21654,"stages":[21654,6965,74,10],"full_match":0,"spread":[["Asian-Pac-Islander",9],["White",1]]},"dpsynth_eps0.5":{"n":22587,"stages":[553,177,1,0],"full_match":0},"dpsynth_eps2":{"n":22587,"stages":[494,131,1,0],"full_match":0},"dpsynth_eps8":{"n":22587,"stages":[582,171,1,0],"full_match":0},"pasynth_eps0.5":{"n":22587,"stages":[564,176,0,0],"full_match":0}}},"4_46":{"k":4,"seed":46,"n_candidates":1878,"n_train":22587,"known":[["age","29"],["sex","Male"],["native_country","Outlying-US(Guam-USVI-etc)"],["education_num","10"]],"truth":{"race":"Black","marital_status":"Never-married","income":"0"},"releases":{"naive":{"n":22587,"stages":[565,378,1,1],"full_match":1,"unique":{"race":"Black","marital_status":"Never-married","income":"0"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,14755,13818,2926],"full_match":1,"spread":[["White",2649],["Black",215],["Amer-Indian-Eskimo",27],["Asian-Pac-Islander",26],["Other",9]]},"kanon_k10":{"n":21654,"stages":[21654,14689,13867,2926],"full_match":1,"spread":[["White",2649],["Black",215],["Amer-Indian-Eskimo",27],["Asian-Pac-Islander",26],["Other",9]]},"dpsynth_eps0.5":{"n":22587,"stages":[590,376,1,0],"full_match":0},"dpsynth_eps2":{"n":22587,"stages":[572,382,0,0],"full_match":0},"dpsynth_eps8":{"n":22587,"stages":[555,376,0,0],"full_match":0},"pasynth_eps0.5":{"n":22587,"stages":[600,428,2,1],"full_match":0,"unique":{"race":"Black","marital_status":"Married-civ-spouse","income":"1"},"is_real_record":false,"all_equal":false}}},"4_47":{"k":4,"seed":47,"n_candidates":1878,"n_train":22587,"known":[["age","33"],["sex","Female"],["native_country","El-Salvador"],["education_num","11"]],"truth":{"race":"White","marital_status":"Never-married","income":"0"},"releases":{"naive":{"n":22587,"stages":[623,163,4,1],"full_match":1,"unique":{"race":"White","marital_status":"Never-married","income":"0"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,6989,190,0],"full_match":0},"kanon_k10":{"n":21654,"stages":[21654,6965,199,0],"full_match":0},"dpsynth_eps0.5":{"n":22587,"stages":[630,207,0,0],"full_match":0},"dpsynth_eps2":{"n":22587,"stages":[657,193,1,0],"full_match":0},"dpsynth_eps8":{"n":22587,"stages":[586,157,0,0],"full_match":0},"pasynth_eps0.5":{"n":22587,"stages":[580,188,0,0],"full_match":0}}},"4_48":{"k":4,"seed":48,"n_candidates":1878,"n_train":22587,"known":[["age","72"],["sex","Female"],["native_country","England"],["education_num","9"]],"truth":{"race":"White","marital_status":"Married-civ-spouse","income":"0"},"releases":{"naive":{"n":22587,"stages":[46,14,1,1],"full_match":1,"unique":{"race":"White","marital_status":"Married-civ-spouse","income":"0"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,6989,50,32],"full_match":1,"spread":[["White",29],["Black",2],["Asian-Pac-Islander",1]]},"kanon_k10":{"n":21654,"stages":[21654,6965,12,12],"full_match":0,"spread":[["White",11],["Black",1]]},"dpsynth_eps0.5":{"n":22587,"stages":[62,22,0,0],"full_match":0},"dpsynth_eps2":{"n":22587,"stages":[51,11,0,0],"full_match":0},"dpsynth_eps8":{"n":22587,"stages":[38,10,0,0],"full_match":0},"pasynth_eps0.5":{"n":22587,"stages":[30,7,0,0],"full_match":0}}},"4_49":{"k":4,"seed":49,"n_candidates":1878,"n_train":22587,"known":[["age","50"],["sex","Female"],["native_country","United-States"],["education_num","16"]],"truth":{"race":"White","marital_status":"Divorced","income":"1"},"releases":{"naive":{"n":22587,"stages":[424,106,98,1],"full_match":1,"unique":{"race":"White","marital_status":"Divorced","income":"1"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,6989,6639,58],"full_match":1,"spread":[["White",52],["Black",4],["Amer-Indian-Eskimo",2]]},"kanon_k10":{"n":21654,"stages":[21654,6965,6680,465],"full_match":1,"spread":[["White",424],["Black",32],["Amer-Indian-Eskimo",5],["Asian-Pac-Islander",3],["Other",1]]},"dpsynth_eps0.5":{"n":22587,"stages":[517,173,157,5],"full_match":0,"spread":[["White",4],["Black",1]]},"dpsynth_eps2":{"n":22587,"stages":[402,93,84,1],"full_match":0,"unique":{"race":"White","marital_status":"Married-civ-spouse","income":"1"},"is_real_record":false,"all_equal":false},"dpsynth_eps8":{"n":22587,"stages":[454,120,108,2],"full_match":0,"spread":[["White",1],["Black",1]]},"pasynth_eps0.5":{"n":22587,"stages":[451,122,108,2],"full_match":0,"spread":[["White",2]]}}},"4_50":{"k":4,"seed":50,"n_candidates":1878,"n_train":22587,"known":[["age","47"],["sex","Female"],["native_country","Honduras"],["education_num","15"]],"truth":{"race":"White","marital_status":"Married-civ-spouse","income":"1"},"releases":{"naive":{"n":22587,"stages":[528,169,1,1],"full_match":1,"unique":{"race":"White","marital_status":"Married-civ-spouse","income":"1"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,6989,190,0],"full_match":0},"kanon_k10":{"n":21654,"stages":[21654,6965,199,0],"full_match":0},"dpsynth_eps0.5":{"n":22587,"stages":[559,183,0,0],"full_match":0},"dpsynth_eps2":{"n":22587,"stages":[538,154,0,0],"full_match":0},"dpsynth_eps8":{"n":22587,"stages":[548,164,0,0],"full_match":0},"pasynth_eps0.5":{"n":22587,"stages":[544,161,0,0],"full_match":0}}},"4_51":{"k":4,"seed":51,"n_candidates":1878,"n_train":22587,"known":[["age","18"],["sex","Female"],["native_country","Mexico"],["education_num","9"]],"truth":{"race":"White","marital_status":"Never-married","income":"0"},"releases":{"naive":{"n":22587,"stages":[355,173,4,1],"full_match":1,"unique":{"race":"White","marital_status":"Never-married","income":"0"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,6989,190,69],"full_match":1,"spread":[["White",48],["Black",16],["Other",5]]},"kanon_k10":{"n":21654,"stages":[21654,6965,199,52],"full_match":1,"spread":[["White",36],["Black",12],["Other",4]]},"dpsynth_eps0.5":{"n":22587,"stages":[360,113,0,0],"full_match":0},"dpsynth_eps2":{"n":22587,"stages":[367,183,6,1],"full_match":0,"unique":{"race":"White","marital_status":"Never-married","income":"0"},"is_real_record":false,"all_equal":false},"dpsynth_eps8":{"n":22587,"stages":[354,178,1,1],"full_match":0,"unique":{"race":"White","marital_status":"Never-married","income":"0"},"is_real_record":false,"all_equal":false},"pasynth_eps0.5":{"n":22587,"stages":[349,131,1,0],"full_match":0}}},"4_52":{"k":4,"seed":52,"n_candidates":1878,"n_train":22587,"known":[["age","49"],["sex","Female"],["native_country","Philippines"],["education_num","9"]],"truth":{"race":"Asian-Pac-Islander","marital_status":"Married-civ-spouse","income":"0"},"releases":{"naive":{"n":22587,"stages":[405,121,2,1],"full_match":1,"unique":{"race":"Asian-Pac-Islander","marital_status":"Married-civ-spouse","income":"0"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,6989,110,24],"full_match":1,"spread":[["Asian-Pac-Islander",21],["Black",2],["White",1]]},"kanon_k10":{"n":21654,"stages":[21654,6965,74,14],"full_match":1,"spread":[["Asian-Pac-Islander",12],["Black",2]]},"dpsynth_eps0.5":{"n":22587,"stages":[382,128,1,0],"full_match":0},"dpsynth_eps2":{"n":22587,"stages":[419,124,1,0],"full_match":0},"dpsynth_eps8":{"n":22587,"stages":[394,113,0,0],"full_match":0},"pasynth_eps0.5":{"n":22587,"stages":[373,118,0,0],"full_match":0}}},"4_53":{"k":4,"seed":53,"n_candidates":1878,"n_train":22587,"known":[["age","29"],["sex","Female"],["native_country","United-States"],["education_num","4"]],"truth":{"race":"White","marital_status":"Divorced","income":"0"},"releases":{"naive":{"n":22587,"stages":[565,187,171,1],"full_match":1,"unique":{"race":"White","marital_status":"Divorced","income":"0"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,6989,6639,56],"full_match":0,"spread":[["White",39],["Black",14],["Amer-Indian-Eskimo",3]]},"kanon_k10":{"n":21654,"stages":[21654,6965,6680,672],"full_match":1,"spread":[["White",508],["Black",148],["Amer-Indian-Eskimo",7],["Other",5],["Asian-Pac-Islander",4]]},"dpsynth_eps0.5":{"n":22587,"stages":[590,214,199,0],"full_match":0},"dpsynth_eps2":{"n":22587,"stages":[572,190,173,2],"full_match":0,"spread":[["Black",1],["White",1]]},"dpsynth_eps8":{"n":22587,"stages":[555,179,163,0],"full_match":0},"pasynth_eps0.5":{"n":22587,"stages":[600,172,157,7],"full_match":0,"spread":[["White",5],["Other",1],["Black",1]]}}},"5_42":{"k":5,"seed":42,"n_candidates":4458,"n_train":22587,"known":[["age","58"],["sex","Male"],["native_country","United-States"],["education_num","6"],["occupation","Other-service"]],"truth":{"race":"White","marital_status":"Never-married","income":"0"},"releases":{"naive":{"n":22587,"stages":[259,182,168,3,1],"full_match":1,"unique":{"race":"White","marital_status":"Never-married","income":"0"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,14755,13818,362,42],"full_match":2,"spread":[["White",34],["Black",8]]},"kanon_k10":{"n":21654,"stages":[21654,14689,13867,1538,214],"full_match":7,"spread":[["White",164],["Black",45],["Other",3],["Amer-Indian-Eskimo",2]]},"dpsynth_eps0.5":{"n":22587,"stages":[245,153,141,1,0],"full_match":0},"dpsynth_eps2":{"n":22587,"stages":[255,197,182,5,2],"full_match":0,"spread":[["White",2]]},"dpsynth_eps8":{"n":22587,"stages":[282,194,184,5,0],"full_match":0},"pasynth_eps0.5":{"n":22587,"stages":[286,214,196,5,0],"full_match":0}}},"5_43":{"k":5,"seed":43,"n_candidates":4458,"n_train":22587,"known":[["age","80"],["sex","Male"],["native_country","United-States"],["education_num","13"],["occupation","Exec-managerial"]],"truth":{"race":"White","marital_status":"Married-civ-spouse","income":"1"},"releases":{"naive":{"n":22587,"stages":[18,14,14,1,1],"full_match":1,"unique":{"race":"White","marital_status":"Married-civ-spouse","income":"1"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,14755,13818,2391,686],"full_match":1,"spread":[["White",655],["Black",22],["Asian-Pac-Islander",7],["Other",1],["Amer-Indian-Eskimo",1]]},"kanon_k10":{"n":21654,"stages":[21654,14689,13867,2391,686],"full_match":1,"spread":[["White",655],["Black",22],["Asian-Pac-Islander",7],["Other",1],["Amer-Indian-Eskimo",1]]},"dpsynth_eps0.5":{"n":22587,"stages":[57,33,29,2,0],"full_match":0},"dpsynth_eps2":{"n":22587,"stages":[13,11,10,3,0],"full_match":0},"dpsynth_eps8":{"n":22587,"stages":[11,9,8,1,0],"full_match":0},"pasynth_eps0.5":{"n":22587,"stages":[25,16,13,3,0],"full_match":0}}},"5_44":{"k":5,"seed":44,"n_candidates":4458,"n_train":22587,"known":[["age","41"],["sex","Male"],["native_country","United-States"],["education_num","5"],["occupation","Other-service"]],"truth":{"race":"White","marital_status":"Separated","income":"0"},"releases":{"naive":{"n":22587,"stages":[605,429,388,3,1],"full_match":1,"unique":{"race":"White","marital_status":"Separated","income":"0"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,14755,13818,173,25],"full_match":2,"spread":[["White",20],["Black",5]]},"kanon_k10":{"n":21654,"stages":[21654,14689,13867,1538,214],"full_match":3,"spread":[["White",164],["Black",45],["Other",3],["Amer-Indian-Eskimo",2]]},"dpsynth_eps0.5":{"n":22587,"stages":[567,381,352,2,2],"full_match":0,"spread":[["White",2]]},"dpsynth_eps2":{"n":22587,"stages":[570,400,369,4,1],"full_match":0,"unique":{"race":"White","marital_status":"Divorced","income":"0"},"is_real_record":false,"all_equal":false},"dpsynth_eps8":{"n":22587,"stages":[653,443,406,2,0],"full_match":0},"pasynth_eps0.5":{"n":22587,"stages":[640,455,411,8,0],"full_match":0}}},"5_45":{"k":5,"seed":45,"n_candidates":4458,"n_train":22587,"known":[["age","41"],["sex","Female"],["native_country","Guatemala"],["education_num","7"],["occupation","Priv-house-serv"]],"truth":{"race":"White","marital_status":"Divorced","income":"0"},"releases":{"naive":{"n":22587,"stages":[605,176,2,1,1],"full_match":1,"unique":{"race":"White","marital_status":"Divorced","income":"0"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,6989,190,0,0],"full_match":0},"kanon_k10":{"n":21654,"stages":[21654,6965,199,102,25],"full_match":1,"spread":[["White",22],["Other",2],["Black",1]]},"dpsynth_eps0.5":{"n":22587,"stages":[567,186,0,0,0],"full_match":0},"dpsynth_eps2":{"n":22587,"stages":[570,170,0,0,0],"full_match":0},"dpsynth_eps8":{"n":22587,"stages":[653,210,0,0,0],"full_match":0},"pasynth_eps0.5":{"n":22587,"stages":[640,185,0,0,0],"full_match":0}}},"5_46":{"k":5,"seed":46,"n_candidates":4458,"n_train":22587,"known":[["age","55"],["sex","Female"],["native_country","England"],["education_num","9"],["occupation","Sales"]],"truth":{"race":"White","marital_status":"Divorced","income":"0"},"releases":{"naive":{"n":22587,"stages":[291,93,1,1,1],"full_match":1,"unique":{"race":"White","marital_status":"Divorced","income":"0"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,6989,50,32,7],"full_match":2,"spread":[["White",6],["Black",1]]},"kanon_k10":{"n":21654,"stages":[21654,6965,12,12,0],"full_match":0},"dpsynth_eps0.5":{"n":22587,"stages":[311,112,0,0,0],"full_match":0},"dpsynth_eps2":{"n":22587,"stages":[300,73,0,0,0],"full_match":0},"dpsynth_eps8":{"n":22587,"stages":[253,88,0,0,0],"full_match":0},"pasynth_eps0.5":{"n":22587,"stages":[295,83,0,0,0],"full_match":0}}},"5_47":{"k":5,"seed":47,"n_candidates":4458,"n_train":22587,"known":[["age","46"],["sex","Female"],["native_country","United-States"],["education_num","9"],["occupation","Tech-support"]],"truth":{"race":"White","marital_status":"Divorced","income":"0"},"releases":{"naive":{"n":22587,"stages":[542,160,137,43,1],"full_match":1,"unique":{"race":"White","marital_status":"Divorced","income":"0"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,6989,6639,2157,43],"full_match":1,"spread":[["White",35],["Black",7],["Asian-Pac-Islander",1]]},"kanon_k10":{"n":21654,"stages":[21654,6965,6680,2157,43],"full_match":1,"spread":[["White",35],["Black",7],["Asian-Pac-Islander",1]]},"dpsynth_eps0.5":{"n":22587,"stages":[471,147,130,31,0],"full_match":0},"dpsynth_eps2":{"n":22587,"stages":[503,142,131,42,2],"full_match":0,"spread":[["White",2]]},"dpsynth_eps8":{"n":22587,"stages":[535,159,141,45,1],"full_match":0,"unique":{"race":"White","marital_status":"Divorced","income":"0"},"is_real_record":false,"all_equal":false},"pasynth_eps0.5":{"n":22587,"stages":[634,167,149,54,2],"full_match":0,"spread":[["Black",1],["White",1]]}}},"5_48":{"k":5,"seed":48,"n_candidates":4458,"n_train":22587,"known":[["age","69"],["sex","Male"],["native_country","United-States"],["education_num","10"],["occupation","Craft-repair"]],"truth":{"race":"White","marital_status":"Married-civ-spouse","income":"1"},"releases":{"naive":{"n":22587,"stages":[64,45,44,6,1],"full_match":1,"unique":{"race":"White","marital_status":"Married-civ-spouse","income":"1"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,14755,13818,2926,530],"full_match":1,"spread":[["White",497],["Black",22],["Amer-Indian-Eskimo",6],["Asian-Pac-Islander",4],["Other",1]]},"kanon_k10":{"n":21654,"stages":[21654,14689,13867,2926,530],"full_match":1,"spread":[["White",497],["Black",22],["Amer-Indian-Eskimo",6],["Asian-Pac-Islander",4],["Other",1]]},"dpsynth_eps0.5":{"n":22587,"stages":[49,36,33,7,1],"full_match":0,"unique":{"race":"White","marital_status":"Never-married","income":"0"},"is_real_record":false,"all_equal":false},"dpsynth_eps2":{"n":22587,"stages":[90,64,55,6,0],"full_match":0},"dpsynth_eps8":{"n":22587,"stages":[59,47,42,5,1],"full_match":0,"unique":{"race":"White","marital_status":"Married-civ-spouse","income":"0"},"is_real_record":false,"all_equal":false},"pasynth_eps0.5":{"n":22587,"stages":[77,55,47,7,3],"full_match":0,"spread":[["White",3]]}}},"5_49":{"k":5,"seed":49,"n_candidates":4458,"n_train":22587,"known":[["age","33"],["sex","Female"],["native_country","Mexico"],["education_num","3"],["occupation","Other-service"]],"truth":{"race":"White","marital_status":"Never-married","income":"0"},"releases":{"naive":{"n":22587,"stages":[623,163,2,1,1],"full_match":1,"unique":{"race":"White","marital_status":"Never-married","income":"0"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,6989,190,33,13],"full_match":1,"spread":[["White",11],["Other",2]]},"kanon_k10":{"n":21654,"stages":[21654,6965,199,102,45],"full_match":2,"spread":[["White",35],["Black",7],["Other",3]]},"dpsynth_eps0.5":{"n":22587,"stages":[630,207,1,0,0],"full_match":0},"dpsynth_eps2":{"n":22587,"stages":[657,193,6,0,0],"full_match":0},"dpsynth_eps8":{"n":22587,"stages":[586,157,6,1,1],"full_match":0,"unique":{"race":"White","marital_status":"Never-married","income":"0"},"is_real_record":false,"all_equal":false},"pasynth_eps0.5":{"n":22587,"stages":[580,188,1,0,0],"full_match":0}}},"5_50":{"k":5,"seed":50,"n_candidates":4458,"n_train":22587,"known":[["age","58"],["sex","Male"],["native_country","United-States"],["education_num","10"],["occupation","Adm-clerical"]],"truth":{"race":"White","marital_status":"Married-civ-spouse","income":"1"},"releases":{"naive":{"n":22587,"stages":[259,182,168,22,1],"full_match":1,"unique":{"race":"White","marital_status":"Married-civ-spouse","income":"1"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,14755,13818,2926,243],"full_match":6,"spread":[["White",210],["Black",31],["Asian-Pac-Islander",1],["Other",1]]},"kanon_k10":{"n":21654,"stages":[21654,14689,13867,2926,243],"full_match":6,"spread":[["White",210],["Black",31],["Asian-Pac-Islander",1],["Other",1]]},"dpsynth_eps0.5":{"n":22587,"stages":[245,153,141,33,0],"full_match":0},"dpsynth_eps2":{"n":22587,"stages":[255,197,182,44,2],"full_match":0,"spread":[["White",2]]},"dpsynth_eps8":{"n":22587,"stages":[282,194,184,27,1],"full_match":0,"unique":{"race":"Black","marital_status":"Divorced","income":"0"},"is_real_record":false,"all_equal":false},"pasynth_eps0.5":{"n":22587,"stages":[286,214,196,41,6],"full_match":0,"spread":[["White",4],["Amer-Indian-Eskimo",1],["Asian-Pac-Islander",1]]}}},"5_51":{"k":5,"seed":51,"n_candidates":4458,"n_train":22587,"known":[["age","72"],["sex","Male"],["native_country","United-States"],["education_num","6"],["occupation","Sales"]],"truth":{"race":"White","marital_status":"Married-civ-spouse","income":"0"},"releases":{"naive":{"n":22587,"stages":[46,32,29,2,1],"full_match":1,"unique":{"race":"White","marital_status":"Married-civ-spouse","income":"0"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,14755,13818,362,23],"full_match":1,"spread":[["White",23]]},"kanon_k10":{"n":21654,"stages":[21654,14689,13867,1538,90],"full_match":1,"spread":[["White",86],["Black",3],["Amer-Indian-Eskimo",1]]},"dpsynth_eps0.5":{"n":22587,"stages":[62,40,38,2,0],"full_match":0},"dpsynth_eps2":{"n":22587,"stages":[51,40,39,2,0],"full_match":0},"dpsynth_eps8":{"n":22587,"stages":[38,28,25,3,0],"full_match":0},"pasynth_eps0.5":{"n":22587,"stages":[30,23,21,0,0],"full_match":0}}},"5_52":{"k":5,"seed":52,"n_candidates":4458,"n_train":22587,"known":[["age","25"],["sex","Male"],["native_country","United-States"],["education_num","13"],["occupation","Transport-moving"]],"truth":{"race":"White","marital_status":"Married-civ-spouse","income":"0"},"releases":{"naive":{"n":22587,"stages":[545,315,269,57,1],"full_match":1,"unique":{"race":"White","marital_status":"Married-civ-spouse","income":"0"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,14755,13818,2391,41],"full_match":6,"spread":[["White",38],["Black",2],["Asian-Pac-Islander",1]]},"kanon_k10":{"n":21654,"stages":[21654,14689,13867,2391,41],"full_match":6,"spread":[["White",38],["Black",2],["Asian-Pac-Islander",1]]},"dpsynth_eps0.5":{"n":22587,"stages":[612,420,394,55,2],"full_match":0,"spread":[["White",2]]},"dpsynth_eps2":{"n":22587,"stages":[494,287,262,35,1],"full_match":0,"unique":{"race":"Black","marital_status":"Never-married","income":"0"},"is_real_record":false,"all_equal":false},"dpsynth_eps8":{"n":22587,"stages":[534,308,284,58,3],"full_match":0,"spread":[["White",3]]},"pasynth_eps0.5":{"n":22587,"stages":[551,343,318,41,0],"full_match":0}}},"5_53":{"k":5,"seed":53,"n_candidates":4458,"n_train":22587,"known":[["age","37"],["sex","Male"],["native_country","El-Salvador"],["education_num","9"],["occupation","Sales"]],"truth":{"race":"White","marital_status":"Never-married","income":"0"},"releases":{"naive":{"n":22587,"stages":[630,451,3,1,1],"full_match":1,"unique":{"race":"White","marital_status":"Never-married","income":"0"},"is_real_record":true,"all_equal":true},"kanon_k5":{"n":21744,"stages":[21744,14755,550,160,10],"full_match":1,"spread":[["White",8],["Black",2]]},"kanon_k10":{"n":21654,"stages":[21654,14689,528,135,10],"full_match":1,"spread":[["White",8],["Black",2]]},"dpsynth_eps0.5":{"n":22587,"stages":[613,394,1,1,0],"full_match":0},"dpsynth_eps2":{"n":22587,"stages":[597,409,1,1,1],"full_match":0,"unique":{"race":"White","marital_status":"Married-civ-spouse","income":"0"},"is_real_record":false,"all_equal":false},"dpsynth_eps8":{"n":22587,"stages":[636,465,3,1,0],"full_match":0},"pasynth_eps0.5":{"n":22587,"stages":[595,391,1,0,0],"full_match":0}}}}},"seeds":[42,43,44,45,46,47,48,49,50,51,52,53],"ks":[2,3,4,5]};
+if (!DATA) {  // 直接開了模板檔：資料要由 make demo_html 嵌入
+  const f = document.getElementById("fatal");
+  f.dataset.template = "1"; f.style.display = "block";
+  f.innerHTML = "<b>這是模板檔，裡面沒有資料。</b><br>請開啟 <code>results/demo/safetwin_demo.html</code>；若該檔不存在，先在專案目錄執行 <code>make demo_html</code>。";
+  throw new Error("DATA 未嵌入");
+}
+const $ = (s, r = document) => r.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmtInt = (n) => Math.round(n).toLocaleString("en-US");
+const f3 = (x) => x == null ? "—" : x.toFixed(3);
+const pct = (x, d = 1) => x == null ? "—" : (x * 100).toFixed(x > 0.995 && x < 1 ? 2 : d) + "%";
+const SVGNS = "http://www.w3.org/2000/svg";
+function svg(tag, attrs = {}, parent) {
+  const e = document.createElementNS(SVGNS, tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+const cssv = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const ease = (t) => 1 - Math.pow(1 - t, 3);
+function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+const REL = Object.fromEntries(DATA.releases.map((r) => [r.id, r]));
+const TINT = {naive:"--red", kanon_k5:"--orange", kanon_k10:"--yellow", "dpsynth_eps0.5":"--blue", dpsynth_eps2:"--indigo",
+  dpsynth_eps8:"--purple", "pasynth_eps0.5":"--teal", real:"--gray"};
+const SECRET_ZH = {race:"種族", marital_status:"婚姻狀況", income:"年收入"};
+const secretVal = (k, v) => k === "income" ? (String(v) === "1" ? "> 5 萬美元" : "≤ 5 萬美元") : v;
+const ATK = {
+  R2: {name:"R2 距離型", c:"--blue", g:"R2_auc", w:"R2_worst_auc_ci_upper", ok:"R2_attack_unsuccessful"},
+  R2b_cal: {name:"R2b 校正距離", c:"--teal", g:"R2b_cal_auc", w:"R2b_cal_worst_auc_ci_upper", ok:"R2b_cal_attack_unsuccessful"},
+  R2b_dr: {name:"R2b 密度比", c:"--gray", g:"R2b_dr_auc", w:"R2b_dr_worst_auc_ci_upper", ok:"R2b_dr_attack_unsuccessful"},
+  R2c: {name:"R2c Shadow model", c:"--pink", g:"R2c_auc", w:"R2c_worst_auc_ci_upper", ok:"R2c_attack_unsuccessful"},
+};
+const MEASURED_EPS = [0.5, 2, 8];
+const AV = {
+  unknown: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20c.8-4 3.9-6.2 7.5-6.2s6.7 2.2 7.5 6.2z"/></svg>',
+  found: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="8.5" r="4"/><path d="M2.8 20c.8-4 3.7-6.2 7.2-6.2 1.5 0 2.9.4 4 1.1A5.5 5.5 0 0 0 13 20z"/><path d="M18 13.2a4.3 4.3 0 1 0 0 8.6 4.3 4.3 0 0 0 0-8.6zm-.8 1.6h1.6v3.5h-1.6zm0 4.3h1.6v1.4h-1.6z"/></svg>',
+};
+const EPS_GROUP = {0.5:"dpsynth_eps0.5", 2:"dpsynth_eps2", 8:"dpsynth_eps8"};
+const bound = (e) => Math.exp(e) / (1 + Math.exp(e));
+const posterior = (p, e) => p * Math.exp(e) / (p * Math.exp(e) + 1 - p);
+
+/* ---------------- 設定 ---------------- */
+const SETTINGS = [
+  {sec:"外觀", items:[
+    {k:"theme", t:"seg", label:"外觀", opts:[["auto","自動"],["light","淺色"],["dark","深色"]], def:"auto"},
+    {k:"accent", t:"swatch", label:"強調色", opts:["blue","indigo","purple","pink","orange","green","teal"], def:"blue"},
+    {k:"fontScale", t:"range", label:"字級", min:80, max:140, step:5, unit:"%", def:100},
+  ]},
+  {sec:"動畫", items:[
+    {k:"speed", t:"range", label:"速度", min:0.25, max:3, step:0.25, unit:"×", def:1},
+    {k:"dwell", t:"range", label:"每步停留", min:0.6, max:6, step:0.1, unit:" 秒", def:2.2},
+    {k:"loop", t:"switch", label:"播完自動重來", def:false},
+    {k:"reduce", t:"switch", label:"減少動態", def:matchMedia("(prefers-reduced-motion: reduce)").matches},
+  ]},
+  {sec:"重識別攻擊", scene:"reid", items:[
+    {k:"k", t:"seg", label:"攻擊者知道幾項", opts:DATA.ks.map((k) => [k, String(k)]), def:DATA.ks.includes(4) ? 4 : DATA.ks[0]},
+    {k:"seed", t:"select", label:"目標人物", opts:DATA.seeds.map((s) => [s, "seed " + s]), def:DATA.seeds.includes(42) ? 42 : DATA.seeds[0]},
+    ...DATA.releases.map((r) => ({k:"show_" + r.id, t:"switch", label:r.name + "　" + r.sub,
+      def:["naive", "kanon_k5", "dpsynth_eps0.5"].includes(r.id)})),
+    {k:"perDot", t:"seg", label:"每個點代表", opts:[[1,"1 列"],[5,"5 列"],[20,"20 列"]], def:5},
+    {k:"detail", t:"switch", label:"顯示詳細說明", def:false},
+    {k:"pop", t:"switch", label:"顯示全體成員統計", def:false},
+    {k:"toast", t:"switch", label:"結尾顯示外洩通知", def:true},
+  ]},
+  {sec:"ε 與成員推論", scene:"eps", items:[
+    ...Object.entries(ATK).map(([id, a]) => ({k:"atk_" + id, t:"switch", label:a.name, def:id === "R2" || id === "R2c"})),
+    {k:"epsMode", t:"seg", label:"點的呈現", opts:[["mean","三次平均"],["runs","每次執行"]], def:"mean"},
+    {k:"ci", t:"switch", label:"誤差線", def:false},
+    {k:"yZoom", t:"seg", label:"縱軸", opts:[["full","全範圍"],["zoom","放大"]], def:"full"},
+    {k:"eps", t:"range", label:"目前 ε", min:0.1, max:10, step:0.05, unit:"", def:2},
+    {k:"showNaive", t:"switch", label:"顯示天真做法的結果", def:false},
+    {k:"showPA", t:"switch", label:"顯示用途感知", def:false},
+    {k:"post", t:"switch", label:"顯示先驗推算", def:false},
+    {k:"prior", t:"range", label:"先驗機率", min:1, max:99, step:1, unit:"%", def:50},
+  ]},
+  {sec:"隱私 × 效用", scene:"pareto", items:[
+    {k:"px", t:"select", label:"橫軸", opts:[["R2","R2 成員推論 AUC"],["R2b_cal","R2b 校正距離 AUC"],["R2c","R2c Shadow AUC"],["R1","R1 重識別率（k=4）"]], def:"R2"},
+    {k:"py", t:"select", label:"縱軸", opts:[["lift","效用保留"],["prauc","PR-AUC"],["top","前 200 名命中率"]], def:"lift"},
+    {k:"incKanon", t:"switch", label:"包含 k-anonymity", def:true},
+    {k:"incPA", t:"switch", label:"包含用途感知", def:false},
+  ]},
+];
+// 不開放調整、固定使用的值
+const FIXED = {glow:true, glass:true, radius:22, narr:true, autoplay:false, dotSize:0.8, focusAt:60, fieldH:190, ghost:true,
+  ageW:1, xLog:"log", epsMax:10, snap:true, shadeBound:true, showCrit:true, range3:true, labels:true, zones:true};
+const DEF = {};
+SETTINGS.forEach((s) => s.items.forEach((i) => DEF[i.k] = i.def));
+const STORE = "safetwin-demo-v2";
+let S = {...DEF};
+try { Object.assign(S, JSON.parse(localStorage.getItem(STORE) || "{}")); } catch (e) {}
+Object.assign(S, FIXED);
+for (const s of SETTINGS) for (const i of s.items)  // 舊存檔可能有已不存在的選項
+  if ((i.t === "seg" || i.t === "select") && !i.opts.some(([v]) => v == S[i.k])) S[i.k] = i.def;
+let scene = "reid";
+try { scene = localStorage.getItem(STORE + "-scene") || "reid"; } catch (e) {}
+if (["#reid", "#eps", "#pareto"].includes(location.hash)) scene = location.hash.slice(1);  // 可直接用網址指定場景
+if (!["reid", "eps", "pareto"].includes(scene)) scene = "reid";
+const save = () => { try { localStorage.setItem(STORE, JSON.stringify(S)); localStorage.setItem(STORE + "-scene", scene); } catch (e) {} };
+const T = (sec) => S.reduce ? 0 : sec * 1000 / S.speed;  // 動畫時間（毫秒）
+
+function applyLook() {
+  const root = document.documentElement;
+  if (S.theme === "auto") root.removeAttribute("data-theme"); else root.dataset.theme = S.theme;
+  root.style.setProperty("--accent", `var(--${S.accent})`);
+  root.style.setProperty("--fs", S.fontScale / 100);
+  root.style.setProperty("--r", S.radius + "px");
+  document.body.classList.toggle("noglow", !S.glow);
+  document.body.classList.toggle("noglass", !S.glass);
+  document.body.classList.toggle("reduce", S.reduce);
+  document.body.classList.toggle("nonarr", !S.narr);
+}
+
+function segThumb(seg) {
+  const on = seg.querySelector('button[aria-pressed="true"]'), th = seg.querySelector(".thumb");
+  if (!on || !th) return;
+  th.style.width = on.offsetWidth + "px";
+  th.style.transform = `translateX(${on.offsetLeft - 2}px)`;
+}
+function makeSeg(opts, val, onPick, cls = "") {
+  const seg = document.createElement("div");
+  seg.className = "seg " + cls;
+  seg.innerHTML = '<span class="thumb"></span>' + opts.map(([v, l]) => `<button data-v="${esc(v)}">${esc(l)}</button>`).join("");
+  const set = (v) => { seg.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.v == v)); segThumb(seg); };
+  seg.addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b) return;
+    const o = opts.find(([v]) => String(v) === b.dataset.v); set(o[0]); onPick(o[0]);
+  });
+  seg._set = set; requestAnimationFrame(() => set(val));
+  return seg;
+}
+function rangeFill(inp) { inp.style.setProperty("--p", ((inp.value - inp.min) / (inp.max - inp.min) * 100) + "%"); }
+
+const ctrls = {};
+function buildSettings() {
+  const body = $("#setBody"); body.innerHTML = "";
+  for (const sec of SETTINGS) {
+    const g = document.createElement("div"); g.className = "grp";
+    g.innerHTML = `<h4>${esc(sec.sec)}${sec.scene ? `<small data-scene-tag="${sec.scene}"></small>` : ""}</h4>`;
+    const list = document.createElement("div"); list.className = "list"; g.appendChild(list);
+    for (const it of sec.items) {
+      const row = document.createElement("div"); row.className = "item";
+      if (it.t === "switch") {
+        row.innerHTML = `<span class="l">${esc(it.label)}</span><label class="sw"><input type="checkbox"><span></span></label>`;
+        const inp = row.querySelector("input"); inp.checked = !!S[it.k];
+        inp.addEventListener("change", () => setS(it.k, inp.checked));
+        ctrls[it.k] = {set: (v) => inp.checked = !!v};
+      } else if (it.t === "range") {
+        row.className = "item col";
+        row.innerHTML = `<div class="top"><span class="l">${esc(it.label)}</span><span class="val tab"></span></div><input type="range" min="${it.min}" max="${it.max}" step="${it.step}">`;
+        const inp = row.querySelector("input"), val = row.querySelector(".val");
+        const show = (v) => { inp.value = v; val.textContent = (+v).toFixed(String(it.step).includes(".") ? String(it.step).split(".")[1].length : 0) + it.unit; rangeFill(inp); };
+        show(S[it.k]);
+        inp.addEventListener("input", () => { show(inp.value); setS(it.k, +inp.value); });
+        ctrls[it.k] = {set: show};
+      } else if (it.t === "seg") {
+        row.innerHTML = `<span class="l">${esc(it.label)}</span>`;
+        const seg = makeSeg(it.opts, S[it.k], (v) => setS(it.k, v)); row.appendChild(seg);
+        ctrls[it.k] = {set: (v) => seg._set(v)};
+      } else if (it.t === "select") {
+        row.innerHTML = `<span class="l">${esc(it.label)}</span><select>${it.opts.map(([v, l]) => `<option value="${esc(v)}">${esc(l)}</option>`).join("")}</select>`;
+        const sel = row.querySelector("select"); sel.value = S[it.k];
+        sel.addEventListener("change", () => { const o = it.opts.find(([v]) => String(v) === sel.value); setS(it.k, o[0]); });
+        ctrls[it.k] = {set: (v) => sel.value = v};
+      } else if (it.t === "swatch") {
+        row.innerHTML = `<span class="l">${esc(it.label)}</span><div class="swatches">${it.opts.map((c) => `<button style="--c:var(--${c})" data-v="${c}" aria-label="${c}"></button>`).join("")}</div>`;
+        const set = (v) => row.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.v === v));
+        row.querySelector(".swatches").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) { set(b.dataset.v); setS(it.k, b.dataset.v); } });
+        set(S[it.k]); ctrls[it.k] = {set};
+      }
+      list.appendChild(row);
+    }
+    body.appendChild(g);
+  }
+  const rb = document.createElement("button"); rb.className = "reset"; rb.textContent = "重設所有設定";
+  rb.onclick = () => { S = {...DEF, ...FIXED}; for (const [k, c] of Object.entries(ctrls)) c.set(S[k]); applyLook(); save(); rebuildAll(); };
+  body.appendChild(rb);
+  const keys = document.createElement("div"); keys.className = "keys";
+  keys.innerHTML = [["空白鍵","播放／暫停"],["← →","上一步／下一步（簡報筆也可）"],["R","從頭開始"],["1 2 3","切換場景"],["F","全螢幕"]]
+    .map(([k, d]) => `<span>${k.split(" ").map((x) => `<kbd>${x}</kbd>`).join(" ")}</span><span>${d}</span>`).join("");
+  body.appendChild(keys);
+  markSceneTags();
+}
+function markSceneTags() { document.querySelectorAll("[data-scene-tag]").forEach((e) => e.textContent = e.dataset.sceneTag === scene ? "目前場景" : ""); }
+
+function setS(k, v) {
+  S[k] = v; save();
+  if (["theme", "accent", "fontScale", "reduce"].includes(k)) {
+    applyLook(); requestAnimationFrame(() => { document.querySelectorAll(".seg").forEach(segThumb); Reid.redrawAll(); Eps.render(); Par.render(); });
+    return;
+  }
+  if (["speed", "dwell", "loop"].includes(k)) return;
+  if (k === "pop") { Reid.renderPop(); return; }
+  if (k === "detail") { Reid.goto(Reid.step, false); return; }
+  if (k === "eps") { Eps.setEps(v, false); return; }
+  const sec = SETTINGS.find((s) => s.items.some((i) => i.k === k));
+  if (sec.scene === "reid") { Reid.stop(); if (["dotSize", "perDot", "fieldH", "ghost", "focusAt"].includes(k)) Reid.relayout(); else Reid.build(); }
+  else if (sec.scene === "eps") Eps.render();
+  else if (sec.scene === "pareto") Par.render();
+}
+
+/* ---------------- 播放控制 ---------------- */
+let playing = false;
+function setPlaying(p) {
+  playing = p;
+  $("#playIcon").innerHTML = p ? '<path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/>' : '<path d="M8 5v14l11-7z"/>';
+}
+const cur = () => ({reid: Reid, eps: Eps, pareto: Par})[scene];
+function togglePlay() { if (playing) { cur().stop(); } else { cur().play(); } }
+
+/* ---------------- 場景一：重識別 ---------------- */
+class DotField {
+  constructor(canvas, n, tint, seed) {
+    this.cv = canvas; this.ctx = canvas.getContext("2d"); this.n = n; this.tint = tint;
+    this.rand = mulberry(seed); this.count = n; this.from = n; this.to = n; this.t0 = 0; this.dur = 0;
+    this.focus = 0; this.focusFrom = 0; this.focusTo = 0; this.found = false; this.verdictColor = tint;
+  }
+  layout() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const w = this.cv.clientWidth, h = S.fieldH;
+    this.cv.style.height = h + "px"; this.cv.width = Math.round(w * dpr); this.cv.height = Math.round(h * dpr);
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0); this.w = w; this.h = h;
+    this.per = S.perDot; this.m = Math.ceil(this.n / this.per);
+    const pad = 8, W = w - 2 * pad, H = h - 2 * pad;
+    const cols = Math.max(1, Math.ceil(Math.sqrt(this.m * W / H))), rows = Math.ceil(this.m / cols);
+    this.cell = Math.min(W / cols, H / rows); this.cols = cols;
+    this.ox = pad + (W - cols * this.cell) / 2; this.oy = pad + (H - rows * this.cell) / 2;
+    // rank → 格子位置（隨機排列，位置僅為示意）
+    const r = mulberry(this.n * 7 + 3), perm = new Uint32Array(this.m);
+    for (let i = 0; i < this.m; i++) perm[i] = i;
+    for (let i = this.m - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); const t = perm[i]; perm[i] = perm[j]; perm[j] = t; }
+    this.perm = perm; this.delay = new Float32Array(this.m); for (let i = 0; i < this.m; i++) this.delay[i] = r();
+    this.draw(performance.now());
+  }
+  setCount(c, animate) {
+    const now = performance.now();
+    this.from = this.curCount(now); this.to = c; this.t0 = now; this.dur = animate ? T(1.1) : 0;
+    this.focusFrom = this.focus; this.focusTo = c <= S.focusAt ? 1 : 0;
+    this.count = c;
+  }
+  curCount(now) { const p = this.dur ? Math.min(1, (now - this.t0) / this.dur) : 1; return this.from + (this.to - this.from) * ease(p); }
+  progress(now) { return this.dur ? Math.min(1, (now - this.t0) / this.dur) : 1; }
+  active(now) { return this.progress(now) < 1 || (this.found && !S.reduce); }
+  draw(now) {
+    const ctx = this.ctx, p = this.progress(now), e = ease(p);
+    ctx.clearRect(0, 0, this.w, this.h);
+    const tint = cssv(this.tint);
+    const litFrom = Math.ceil(this.from / this.per), litTo = Math.ceil(this.to / this.per);
+    this.focus = this.focusFrom + (this.focusTo - this.focusFrom) * e;
+    const s = this.cell * S.dotSize, off = (this.cell - s) / 2, dim = 1 - this.focus * 0.92;
+    const lo = Math.min(litFrom, litTo), hi = Math.max(litFrom, litTo), shrinking = litTo < litFrom;
+    if (S.ghost) { ctx.globalAlpha = 1; ctx.fillStyle = cssv("--ghost"); for (let k = 0; k < this.m; k++) this.rect(k, s, off); }
+    ctx.fillStyle = tint; ctx.globalAlpha = dim;
+    for (let k = 0; k < lo; k++) this.rect(k, s, off);
+    if (hi > lo) {  // 轉換中的點：每點有自己的隨機延遲，逐一淡出（或倒退時淡入）
+      const B = 8, buckets = Array.from({length: B}, () => []);
+      for (let k = lo; k < hi; k++) {
+        const local = Math.min(1, Math.max(0, (p - this.delay[k] * 0.65) / 0.35));
+        const a = shrinking ? 1 - local : local;
+        if (a > 0.02) buckets[Math.min(B - 1, Math.floor(a * B))].push(k);
+      }
+      buckets.forEach((ks, b) => { if (!ks.length) return; ctx.globalAlpha = (b + 0.5) / B * dim; for (const k of ks) this.rect(k, s, off); });
+    }
+    ctx.globalAlpha = 1;
+    if (this.focus > 0.01) this.drawFocus(now, Math.round(this.to), e);
+  }
+  rect(k, s, off) { const i = this.perm[k], x = this.ox + (i % this.cols) * this.cell + off, y = this.oy + Math.floor(i / this.cols) * this.cell + off; this.ctx.fillRect(x, y, s, s); }
+  drawFocus(now, c, e) {
+    const ctx = this.ctx, cx = this.w / 2, cy = this.h / 2, f = this.focus;
+    const col = cssv(this.verdictColor);
+    if (c === 0) {
+      ctx.globalAlpha = f; ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.setLineDash([5, 5]);
+      ctx.beginPath(); ctx.arc(cx, cy, Math.min(this.h * 0.28, 40) * (0.7 + 0.3 * f), 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = col; ctx.font = `600 ${Math.round(13 * S.fontScale / 100)}px -apple-system,"Segoe UI","Microsoft JhengHei",sans-serif`;
+      ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("查無此人", cx, cy); ctx.globalAlpha = 1; return;
+    }
+    const R = Math.min(this.w, this.h) * 0.44;
+    const rad = Math.max(2.5, Math.min(c === 1 ? 16 : 11, R / Math.sqrt(c) * 0.62));
+    const step = rad * 2.25 / Math.sqrt(Math.PI) * 1.05;
+    for (let i = 0; i < c; i++) {
+      const a = i * 2.39996, r = step * Math.sqrt(i + 0.5);
+      const appear = Math.min(1, Math.max(0, f * 1.6 - (i / Math.max(c, 1)) * 0.6));
+      ctx.globalAlpha = appear; ctx.fillStyle = col;
+      ctx.beginPath(); ctx.arc(cx + r * Math.cos(a), cy + r * Math.sin(a), rad * (0.4 + 0.6 * ease(appear)), 0, Math.PI * 2); ctx.fill();
+    }
+    if (c === 1 && this.found) {
+      const ph = ((now / 1000) % 1.6) / 1.6;
+      ctx.globalAlpha = (1 - ph) * f; ctx.strokeStyle = col; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(cx, cy, rad + 4 + ph * 22, 0, Math.PI * 2); ctx.stroke();
+      ctx.globalAlpha = f; ctx.fillStyle = "#fff";  // 人形
+      ctx.beginPath(); ctx.arc(cx, cy - rad * 0.28, rad * 0.32, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(cx, cy + rad * 0.42, rad * 0.55, rad * 0.32, 0, Math.PI, 0); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+}
+
+const Reid = {
+  step: 0, fields: {}, timer: null, raf: 0,
+  sc() { return DATA.funnel.scenarios[S.k + "_" + S.seed]; },
+  shown() { return DATA.releases.filter((r) => S["show_" + r.id]); },
+  count(rid, step) { const r = this.sc().releases[rid]; return step === 0 ? r.n : r.stages[step - 1]; },
+  build() {
+    const sc = this.sc(); this.step = 0;
+    const shown = this.shown();
+    const names = shown.map((r) => r.name + (r.id === "naive" ? "" : " " + r.sub.split("・")[0])).join("、");
+    $("#reidH1").textContent = `同一個攻擊者，查 ${shown.length} 份釋出資料`;
+    $("#attSub").textContent = `某位真實個人（隨機抽出，seed ${sc.seed}）`;
+    const zh = DATA.funnel.attr_zh;
+    $("#chips").innerHTML = sc.known.map(([a, v], i) => `<li class="chip" data-i="${i}"><span class="ci">${i + 1}</span><span class="cl">${esc(zh[a] || a)}</span><span class="cv">${esc(v)}</span></li>`).join("");
+    const grid = $("#rgrid"); grid.innerHTML = ""; this.fields = {};
+    shown.forEach((r, idx) => {
+      const rr = sc.releases[r.id];
+      const card = document.createElement("div"); card.className = "rcard"; card.style.setProperty("--tint", `var(${TINT[r.id]})`);
+      card.innerHTML = `<div class="rhead"><span class="swc"></span><div><div class="nm">${esc(r.name)}</div><div class="sb">${esc(r.sub)}</div></div></div>
+        <canvas></canvas><div class="rcount"><span class="big num">${fmtInt(rr.n)}</span><span class="of num">列符合</span></div>
+<div class="verdict"></div>`;
+      grid.appendChild(card);
+      const f = new DotField(card.querySelector("canvas"), rr.n, TINT[r.id], idx + 1);
+      f.card = card; f.rid = r.id; this.fields[r.id] = f;
+    });
+    requestAnimationFrame(() => { Object.values(this.fields).forEach((f) => f.layout()); this.goto(0, false); });
+    this.renderPop();
+    $("#avatar").classList.remove("found"); $("#avatar").innerHTML = AV.unknown; $("#avatar").setAttribute("aria-label", "目標身分未知");
+  },
+  relayout() { Object.values(this.fields).forEach((f) => f.layout()); this.goto(this.step, false); },
+  redrawAll() { Object.values(this.fields).forEach((f) => f.draw(performance.now())); },
+  goto(step, animate = true) {
+    const sc = this.sc(); step = Math.max(0, Math.min(sc.k, step)); this.step = step;
+    document.querySelectorAll("#chips .chip").forEach((c, i) => {
+      const on = i < step; c.classList.toggle("on", on);
+      if (animate && i === step - 1) { c.classList.add("pop"); setTimeout(() => c.classList.remove("pop"), T(0.35)); }
+    });
+    const final = step === sc.k;
+    for (const f of Object.values(this.fields)) {
+      const rr = sc.releases[f.rid], c = this.count(f.rid, step);
+      const found = final && c === 1 && rr.is_real_record;
+      f.found = found;
+      f.verdictColor = !final ? f.tint : c === 0 ? "--green" : c === 1 ? (rr.is_real_record ? "--red" : "--orange") : "--orange";
+      f.setCount(c, animate);
+      f.cv.setAttribute("role", "img");
+      f.cv.setAttribute("aria-label", `${REL[f.rid].name}：${fmtInt(c)} 列符合`);
+      this.animNum(f.card.querySelector(".big"), c, animate);
+      f.card.classList.toggle("hit", found);
+      const v = f.card.querySelector(".verdict");
+      v.classList.remove("on");
+      if (final) { v.innerHTML = this.verdict(rr, c, REL[f.rid]); setTimeout(() => v.classList.add("on"), animate ? T(0.9) : 0); }
+      else v.innerHTML = "";
+    }
+    this.narrate(step, animate);
+    const anyFound = final && Object.values(this.fields).some((f) => f.found);
+    const av = $("#avatar");
+    if (anyFound) setTimeout(() => { av.classList.add("found"); av.innerHTML = AV.found; av.setAttribute("aria-label", "目標已被認出"); }, animate ? T(0.9) : 0);
+    else { av.classList.remove("found"); av.innerHTML = AV.unknown; av.setAttribute("aria-label", "目標身分未知"); }
+    if (final && animate && S.toast) {
+      const hit = Object.values(this.fields).find((f) => f.found);
+      if (hit) setTimeout(() => toast(`攻擊結果　<small>剛剛</small>`, `${esc(REL[hit.rid].name)}：此人被唯一認出，${DATA.funnel.secrets.map((s) => SECRET_ZH[s]).join("、")}全部外洩。`), T(1.3));
+    }
+    this.loop();
+  },
+  verdict(rr, c, rel) {
+    const more = (t) => S.detail ? `<div class="d">${t}</div>` : "";
+    if (c === 0) return `<span class="pill" style="--c:var(--green)">找不到此人</span>` + more("沒有任何一列與這些背景資訊相符。");
+    if (c === 1) {
+      if (rr.is_real_record) {
+        const kv = DATA.funnel.secrets.map((s) => `<span>${SECRET_ZH[s]}</span><span>${esc(secretVal(s, rr.unique[s]))}</span>`).join("");
+        return `<span class="pill" style="--c:var(--red)">身分被認出</span><div class="kv">${kv}</div>` + more("唯一的一列就是此人的真實紀錄。");
+      }
+      return `<span class="pill" style="--c:var(--orange)">唯一一列，但不是此人</span>` +
+        more(rel.synthetic ? "這一列是模型生成的虛構個人" + (rr.all_equal ? "，碰巧與此人所有欄位相同。" : "，與此人的真實紀錄不同。") : "與此人的真實紀錄不同。");
+    }
+    const sp = (rr.spread || []).map(([v, n]) => `<span>${esc(v)} × ${n}</span>`).join("");
+    return `<span class="pill" style="--c:var(--orange)">無法分辨・${fmtInt(c)} 人</span>` +
+      (S.detail ? `<div class="spread">${sp}</div>` + (!rel.synthetic && rr.full_match > 0 ? `<div class="d">但此人的完整紀錄仍原樣留在資料中（${rr.full_match} 列）。</div>` : "") : "");
+  },
+  narrate(step, animate) {
+    const sc = this.sc(), zh = DATA.funnel.attr_zh, shown = this.shown();
+    const n = $("#reidNarr"); n.classList.remove("fade"); void n.offsetWidth; if (animate) n.classList.add("fade");
+    $("#reidStepNo").textContent = step === 0 ? "開始" : step === sc.k ? "結果" : `第 ${step} 項`;
+    const lab = (r) => r.id.startsWith("kanon") ? `k=${r.sub.replace(/\D/g, "")}` : r.id === "naive" ? "天真做法" : r.sub.split("・")[0].replace(/\s/g, "") + (r.id.startsWith("pa") ? " 用途感知" : "");
+    if (step === 0) { $("#reidTxt").innerHTML = `按播放：攻擊者逐項比對，看每份資料最後剩幾列符合。`; return; }
+    const [a, v] = sc.known[step - 1];
+    const parts = shown.map((r) => `${esc(lab(r))} 剩 <b class="num">${fmtInt(this.count(r.id, step))}</b> 列`).join("、");
+    $("#reidTxt").innerHTML = (step === sc.k ? "結果：" : `加入「${esc(zh[a] || a)}」：`) + (parts || "（未選擇釋出資料）");
+  },
+  animNum(el, to, animate) {
+    const from = +(el.dataset.v ?? to); el.dataset.v = to;
+    const t0 = performance.now(), dur = T(1.0);
+    if (!animate || from === to || dur <= 0) { el.textContent = fmtInt(to); return; }
+    const tick = (now) => { const p = Math.min(1, (now - t0) / dur); el.textContent = fmtInt(from + (to - from) * ease(p)); if (p < 1) requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
+  },
+  loop() {
+    if (this.raf) return;
+    const tick = (now) => {
+      let any = false;
+      for (const f of Object.values(this.fields)) { f.draw(now); if (f.active(now)) any = true; }
+      this.raf = any && scene === "reid" ? requestAnimationFrame(tick) : 0;
+    };
+    this.raf = requestAnimationFrame(tick);
+  },
+  renderPop() {
+    $("#popCard").style.display = S.pop ? "" : "none"; if (!S.pop) return;
+    const sc = this.sc(), shown = this.shown(), k = sc.k, w = 1;
+    const vals = shown.map((r) => ({r, d: DATA.reid[r.id] && DATA.reid[r.id][k + "_" + w]}));
+    const max = Math.max(0.01, ...vals.map((x) => x.d ? x.d.rate : 0));
+    $("#popCard").innerHTML = `<div class="sectitle">不只這一位：全部 ${fmtInt(sc.n_train)} 位訓練集成員</div>
+      <div class="caption" style="margin:-4px 0 8px">知道 ${k} 項時被唯一且正確認出的比例（R1）</div>` +
+      vals.map(({r, d}) => `<div class="row" style="--tint:var(${TINT[r.id]})"><div class="nm">${esc(r.name)}<small>${esc(r.sub)}</small></div>
+        <div class="bar"><i style="width:${d ? d.rate / max * 100 : 0}%"></i></div>
+        <div class="v num">${d ? pct(d.rate, 2) : "—"}<small>${d ? `${fmtInt(d.succ)} 人` : "未計算"}</small></div></div>`).join("");
+  },
+  next() { const sc = this.sc(); if (this.step < sc.k) { this.goto(this.step + 1); return true; } return false; },
+  prev() { if (this.step > 0) this.goto(this.step - 1); },
+  play() {
+    setPlaying(true); clearTimeout(this.timer);
+    if (this.step >= this.sc().k) this.goto(0, true);
+    const tick = () => {
+      if (!playing) return;
+      if (this.next()) this.timer = setTimeout(tick, T(1.1) + S.dwell * 1000);
+      else if (S.loop) this.timer = setTimeout(() => { this.goto(0, true); this.timer = setTimeout(tick, S.dwell * 1000); }, S.dwell * 2000);
+      else setPlaying(false);
+    };
+    this.timer = setTimeout(tick, Math.min(700, S.dwell * 500));
+  },
+  stop() { clearTimeout(this.timer); setPlaying(false); },
+  restart() { this.stop(); this.goto(0, true); },
+};
+
+function toast(t, b) {
+  $("#toastT").innerHTML = t; $("#toastB").innerHTML = b;
+  const el = $("#toast"); el.classList.add("on");
+  clearTimeout(toast._t); toast._t = setTimeout(() => el.classList.remove("on"), 5200);
+}
+
+/* ---------------- 場景二：ε 與成員推論 ---------------- */
+const Eps = {
+  raf: 0, sweep: null, drawn: false,
+  geo() {
+    const m = {l: 64, r: 120, t: 28, b: 58}, W = 800, H = 470;
+    const xmin = S.xLog === "log" ? 0.1 : 0, xmax = S.epsMax;
+    const [ymin, ymax] = S.yZoom === "zoom" ? [0.44, 0.64] : [0.4, 1.0];
+    const X = S.xLog === "log" ? (e) => m.l + (Math.log10(Math.max(e, 0.1)) - Math.log10(0.1)) / (Math.log10(xmax) - Math.log10(0.1)) * (W - m.l - m.r)
+                               : (e) => m.l + (e - xmin) / (xmax - xmin) * (W - m.l - m.r);
+    const Xi = S.xLog === "log" ? (px) => Math.pow(10, Math.log10(0.1) + (px - m.l) / (W - m.l - m.r) * (Math.log10(xmax) - Math.log10(0.1)))
+                                : (px) => xmin + (px - m.l) / (W - m.l - m.r) * (xmax - xmin);
+    const Y = (a) => m.t + (1 - (a - ymin) / (ymax - ymin)) * (H - m.t - m.b);
+    return {m, W, H, X, Xi, Y, ymin, ymax, xmin: S.xLog === "log" ? 0.1 : 0, xmax};
+  },
+  render() {
+    const g = this.geo(), root = $("#epsChart"); root.innerHTML = "";
+    const clip = svg("clipPath", {id: "plotclip"}, svg("defs", {}, root));
+    svg("rect", {x: g.m.l, y: g.m.t, width: g.W - g.m.l - g.m.r, height: g.H - g.m.t - g.m.b}, clip);
+    const grid = svg("g", {class: "grid"}, root), axis = svg("g", {class: "axis"}, root);
+    const yt = S.yZoom === "zoom" ? [0.45, 0.5, 0.55, 0.6] : [0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0];
+    yt.forEach((v) => { svg("line", {x1: g.m.l, x2: g.W - g.m.r, y1: g.Y(v), y2: g.Y(v)}, grid); svg("text", {x: g.m.l - 10, y: g.Y(v) + 4, "text-anchor": "end", class: "tab"}, axis).textContent = v.toFixed(2); });
+    const xt = S.xLog === "log" ? [0.1, 0.2, 0.5, 1, 2, 5, 10, 20].filter((v) => v <= g.xmax + 1e-9) : Array.from({length: 11}, (_, i) => +(g.xmax * i / 10).toFixed(1));
+    xt.forEach((v) => { svg("line", {x1: g.X(v), x2: g.X(v), y1: g.m.t, y2: g.H - g.m.b}, grid); svg("text", {x: g.X(v), y: g.H - g.m.b + 20, "text-anchor": "middle", class: "tab"}, axis).textContent = v; });
+    svg("text", {x: (g.m.l + g.W - g.m.r) / 2, y: g.H - 12, "text-anchor": "middle", class: "ttl"}, axis).textContent = "隱私預算 ε" + (S.xLog === "log" ? "（對數刻度）" : "");
+    const yl = svg("text", {x: 18, y: (g.m.t + g.H - g.m.b) / 2, "text-anchor": "middle", class: "ttl", transform: `rotate(-90 18 ${(g.m.t + g.H - g.m.b) / 2})`}, axis); yl.textContent = "成員推論 AUC";
+    const plot = svg("g", {"clip-path": "url(#plotclip)"}, root);
+    // 理論曲線
+    const pts = []; const N = 160;
+    for (let i = 0; i <= N; i++) { const e = S.xLog === "log" ? Math.pow(10, Math.log10(0.1) + i / N * (Math.log10(g.xmax) - Math.log10(0.1))) : g.xmin + i / N * (g.xmax - g.xmin); pts.push([g.X(e), g.Y(bound(e))]); }
+    const d = "M" + pts.map((p) => p.map((v) => v.toFixed(1)).join(",")).join("L");
+    const accent = cssv("--accent");
+    if (S.shadeBound) {
+      svg("path", {d: d + `L${g.W - g.m.r},${g.m.t}L${g.m.l},${g.m.t}Z`, fill: cssv("--red"), opacity: 0.07}, plot);
+      svg("text", {x: g.X(S.xLog === "log" ? 0.16 : g.xmax * 0.04), y: g.Y(S.yZoom === "zoom" ? 0.63 : 0.95), fill: cssv("--red"), "font-size": 13, "font-weight": 600}, plot).textContent = "理論上不可能";
+    }
+    svg("line", {x1: g.m.l, x2: g.W - g.m.r, y1: g.Y(0.5), y2: g.Y(0.5), stroke: cssv("--label3"), "stroke-width": 1.5}, plot);
+    svg("text", {x: g.W - g.m.r + 6, y: g.Y(0.5) + 4, "font-size": 12}, root).textContent = "隨機猜 0.50";
+    if (S.showCrit) {
+      svg("line", {x1: g.m.l, x2: g.W - g.m.r, y1: g.Y(0.55), y2: g.Y(0.55), stroke: cssv("--orange"), "stroke-dasharray": "6 5", "stroke-width": 1.5}, plot);
+      svg("text", {x: g.W - g.m.r + 6, y: g.Y(0.55) + 4, "font-size": 12, fill: cssv("--orange")}, root).textContent = "判準 0.55";
+    }
+    const curve = svg("path", {d, fill: "none", stroke: accent, "stroke-width": 3, "stroke-linecap": "round"}, plot);
+    if (!this.drawn && !S.reduce && scene === "eps") { const L = curve.getTotalLength(); curve.style.strokeDasharray = L; curve.style.strokeDashoffset = L; curve.getBoundingClientRect(); curve.style.transition = `stroke-dashoffset ${T(1.6)}ms cubic-bezier(.4,0,.2,1)`; curve.style.strokeDashoffset = 0; this.drawn = true; }
+    svg("text", {x: g.W - g.m.r + 6, y: Math.max(g.m.t + 10, Math.min(g.H - g.m.b, g.Y(bound(g.xmax)) + 4)), "font-size": 12, fill: accent, "font-weight": 600}, root).textContent = "理論上限";
+    // 天真做法的攻擊結果（右側刻度）
+    if (S.showNaive) {
+      const nv = DATA.groups.naive;
+      Object.entries(ATK).forEach(([id, a]) => {
+        if (!S["atk_" + id] || !nv[a.g]) return;
+        const v = nv[a.g].mean; if (v > g.ymax || v < g.ymin) return;
+        const y = g.Y(v);
+        svg("path", {d: `M${g.W - g.m.r - 2},${y}l10,-6v12z`, fill: cssv(a.c)}, root);
+        svg("text", {x: g.W - g.m.r + 12, y: y + 4, "font-size": 11.5, fill: cssv(a.c)}, root).textContent = `天真 ${v.toFixed(3)}`;
+      });
+    }
+    // 實測點
+    const atks = Object.keys(ATK).filter((id) => S["atk_" + id]);
+    const pg = svg("g", {}, plot); let n = 0;
+    const groups = ["dpsynth_eps0.5", "dpsynth_eps2", "dpsynth_eps8"].concat(S.showPA ? ["pasynth_eps0.5"] : []);
+    for (const grp of groups) {
+      const runs = DATA.runs.filter((r) => r.group === grp);
+      if (!runs.length) continue;
+      const eps = runs[0].eps, pa = grp.startsWith("pa");
+      atks.forEach((id, ai) => {
+        const col = cssv(ATK[id].c), base = (ai - (atks.length - 1) / 2) * 16 + (pa ? 8 : 0);
+        const items = S.epsMode === "mean"
+          ? (() => { const v = runs.map((r) => r[id]).filter(Boolean); if (!v.length) return []; const ms = v.map((x) => x[0]); return [[ms.reduce((a, b) => a + b, 0) / ms.length, Math.min(...ms), Math.max(...ms), 0]]; })()
+          : runs.map((r, si) => r[id] ? [...r[id], (si - 1) * 4.5] : null).filter(Boolean);
+        items.forEach(([v, lo, hi, dx]) => {
+          const x = g.X(eps) + base + dx, gg = svg("g", {class: "pt"}, pg);
+          gg.style.opacity = 0; gg.style.transition = `opacity ${T(0.4)}ms ${T(0.6) + n * T(0.03)}ms`; n++;
+          if (S.ci) svg("line", {x1: x, x2: x, y1: g.Y(lo), y2: g.Y(hi), stroke: col, "stroke-width": 1.6, opacity: 0.55}, gg);
+          if (pa) svg("rect", {x: x - 4.5, y: g.Y(v) - 4.5, width: 9, height: 9, transform: `rotate(45 ${x} ${g.Y(v)})`, fill: cssv("--bg-elev"), stroke: col, "stroke-width": 2}, gg);
+          else svg("circle", {cx: x, cy: g.Y(v), r: S.epsMode === "mean" ? 6 : 4.5, fill: col, stroke: cssv("--bg-elev"), "stroke-width": 1.5}, gg);
+          requestAnimationFrame(() => requestAnimationFrame(() => gg.style.opacity = 1));
+        });
+      });
+    }
+    // ε 游標
+    const cg = svg("g", {id: "epsCursor"}, root);
+    svg("line", {id: "cLine", y1: g.m.t, y2: g.H - g.m.b, stroke: accent, "stroke-width": 1.5, "stroke-dasharray": "3 3"}, cg);
+    svg("circle", {id: "cDot", r: 7, fill: accent, stroke: "#fff", "stroke-width": 2.5}, cg);
+    svg("rect", {id: "cTagBg", rx: 9, height: 22, fill: accent}, cg);
+    svg("text", {id: "cTag", fill: "#fff", "font-size": 12.5, "font-weight": 700, "text-anchor": "middle"}, cg);
+    const hit = svg("rect", {x: g.m.l, y: g.m.t, width: g.W - g.m.l - g.m.r, height: g.H - g.m.t - g.m.b, fill: "transparent", style: "cursor:ew-resize"}, root);
+    const toEps = (ev) => { const p = root.createSVGPoint(); p.x = ev.clientX; p.y = ev.clientY; const q = p.matrixTransform(root.getScreenCTM().inverse()); return g.Xi(Math.max(g.m.l, Math.min(g.W - g.m.r, q.x))); };
+    let drag = false;
+    hit.addEventListener("pointerdown", (ev) => { drag = true; hit.setPointerCapture(ev.pointerId); this.stop(); this.setEps(this.snapE(toEps(ev), g), true); });
+    hit.addEventListener("pointermove", (ev) => { if (drag) this.setEps(this.snapE(toEps(ev), g), true); });
+    hit.addEventListener("pointerup", () => drag = false);
+    this.g = g;
+    $("#epsReadout").innerHTML = `<div class="bigeps num" id="epsBig"></div>
+      <input type="range" id="epsSlider" min="0" max="1000" step="1" style="margin:10px 0 4px"><div id="epsDyn"></div>`;
+    const sl = $("#epsSlider");
+    sl.addEventListener("input", () => { this.stop(); this.setEps(this.snapE(this.fromS(+sl.value), g), true, true); });
+    // 圖例
+    $("#epsLegend").innerHTML = `<span><i class="line" style="--c:${accent};background:${accent}"></i>理論上限</span><span>點：實測</span>` +
+      atks.map((id) => `<span><i style="--c:var(${ATK[id].c})"></i>${ATK[id].name}</span>`).join("") +
+      (S.showPA ? `<span><i style="--c:transparent;border:2px solid var(--label2);border-radius:2px;transform:rotate(45deg);width:9px;height:9px"></i>用途感知</span>` : "") +
+      "";
+    this.setEps(S.eps, false);
+  },
+  snapE(e, g) {
+    if (!S.snap) return e;
+    for (const m of MEASURED_EPS) if (m <= g.xmax && Math.abs(g.X(m) - g.X(e)) < 14) return m;
+    return e;
+  },
+  toS(v) { const g = this.g; return S.xLog === "log" ? (Math.log10(v) - Math.log10(0.1)) / (Math.log10(g.xmax) - Math.log10(0.1)) * 1000 : (v - 0.05) / (g.xmax - 0.05) * 1000; },
+  fromS(s) { const g = this.g; return S.xLog === "log" ? Math.pow(10, Math.log10(0.1) + s / 1000 * (Math.log10(g.xmax) - Math.log10(0.1))) : 0.05 + s / 1000 * (g.xmax - 0.05); },
+  setEps(e, fromUser, fromSlider) {
+    const g = this.g; if (!g) return;
+    e = Math.max(g.xmin || 0.1, Math.min(g.xmax, e)); if (S.xLog !== "log") e = Math.max(0.05, e);
+    S.eps = +e.toFixed(3); if (fromUser && ctrls.eps) ctrls.eps.set(S.eps); save();
+    const x = g.X(e), y = g.Y(Math.min(g.ymax, bound(e)));
+    const L = $("#cLine"); if (!L) return;
+    L.setAttribute("x1", x); L.setAttribute("x2", x);
+    const dot = $("#cDot"); dot.setAttribute("cx", x); dot.setAttribute("cy", y); dot.style.display = bound(e) > g.ymax ? "none" : "";
+    const label = "ε = " + (e < 1 ? e.toFixed(2) : e.toFixed(e < 10 ? 2 : 1));
+    const tg = $("#cTag"); tg.textContent = label; tg.setAttribute("x", x); tg.setAttribute("y", g.m.t - 6 + 0);
+    const bg = $("#cTagBg"), w = label.length * 7.4 + 14; bg.setAttribute("width", w); bg.setAttribute("x", x - w / 2); bg.setAttribute("y", g.m.t - 21);
+    const sl = $("#epsSlider"); if (sl && !fromSlider) { sl.value = this.toS(e); } if (sl) rangeFill(sl);
+    this.readout(e);
+  },
+  readout(e) {
+    const p = S.prior / 100, b = bound(e), post = posterior(p, e);
+    const m = MEASURED_EPS.find((v) => Math.abs(Math.log(v / e)) < 0.01);
+    let meas;
+    if (m != null) {
+      const gr = DATA.groups[EPS_GROUP[m]];
+      const rows = Object.entries(ATK).filter(([id]) => S["atk_" + id] && gr[ATK[id].g]).map(([id, a]) =>
+        `<div class="mrow" style="--c:var(${a.c})"><i></i><span>${a.name}</span><b class="num">${f3(gr[a.g].mean)}</b></div>`).join("");
+      const ok = Object.entries(ATK).filter(([id]) => S["atk_" + id] && gr[ATK[id].g]).every(([, a]) => gr[a.ok]);
+      meas = `<div class="measured">${rows}<div style="margin-top:8px"><span class="pill" style="--c:var(${ok ? "--green" : "--red"})">${ok ? "攻擊皆未成功" : "有攻擊成功"}</span></div></div>
+        <div class="note">實測 AUC，三次執行平均；0.5 等於隨機猜。</div>`;
+    } else {
+      meas = `<div class="measured"><div class="caption">這個 ε 沒有實測，只有理論上限。</div></div>`;
+    }
+    $("#epsBig").innerHTML = `ε = ${e < 10 ? e.toFixed(e === Math.round(e * 10) / 10 ? 1 : 2) : e.toFixed(1)}`;
+    $("#epsDyn").innerHTML = `
+      <div class="metric"><span class="k">攻擊 AUC 理論上限</span><span class="v num">${b.toFixed(3)}</span></div>
+      ${S.post ? `<div class="metric"><span class="k">先驗 ${S.prior}% → 最多</span><span class="v num">${pct(post)}</span></div>` : ""}
+      ${meas}`;
+  },
+  play() {
+    setPlaying(true); const g = this.g;
+    const lo = S.xLog === "log" ? Math.log10(0.1) : 0.05, hi = S.xLog === "log" ? Math.log10(g.xmax) : g.xmax;
+    const conv = (u) => S.xLog === "log" ? Math.pow(10, u) : u;
+    let u = S.eps >= g.xmax * 0.98 ? lo : (S.xLog === "log" ? Math.log10(S.eps) : S.eps), last = performance.now(), hold = 0;
+    const stops = MEASURED_EPS.filter((m) => m <= g.xmax).map((m) => S.xLog === "log" ? Math.log10(m) : m);
+    const rate = (hi - lo) / (9 / S.speed);
+    const tick = (now) => {
+      if (!playing) return;
+      const dt = (now - last) / 1000; last = now;
+      if (hold > 0) { hold -= dt; this.raf = requestAnimationFrame(tick); return; }
+      const nu = u + rate * dt, st = stops.find((s) => u < s && nu >= s);
+      if (st != null) { u = st; this.setEps(conv(u), true); hold = S.dwell; }
+      else { u = nu; if (u >= hi) { u = hi; this.setEps(conv(u), true); if (S.loop) { u = lo; hold = S.dwell; } else { setPlaying(false); return; } } else this.setEps(conv(u), true); }
+      this.raf = requestAnimationFrame(tick);
+    };
+    this.raf = requestAnimationFrame(tick);
+  },
+  stop() { cancelAnimationFrame(this.raf); setPlaying(false); },
+  next() { this.stop(); const nxt = MEASURED_EPS.find((m) => m > S.eps + 1e-6 && m <= this.g.xmax); this.setEps(nxt ?? this.g.xmax, true); },
+  prev() { this.stop(); const pv = [...MEASURED_EPS].reverse().find((m) => m < S.eps - 1e-6); this.setEps(pv ?? 0.1, true); },
+  restart() { this.stop(); this.drawn = false; this.render(); this.setEps(0.1, true); },
+};
+
+/* ---------------- 場景三：隱私 × 效用 ---------------- */
+const PX = {R2: {g: "R2_auc", name: "R2 成員推論 AUC", auc: true}, R2b_cal: {g: "R2b_cal_auc", name: "R2b 校正距離 AUC", auc: true},
+  R2c: {g: "R2c_auc", name: "R2c Shadow model AUC", auc: true}, R1: {g: "R1_reid_rate_k4", name: "R1 重識別率（k=4，確切年齡）", auc: false}};
+const PY = {lift: {g: "U1_retained_lift", name: "效用保留"}, prauc: {g: "U1_pr_auc", name: "PR-AUC"}, top: {g: "U1_top200_precision", name: "前 200 名命中率"}};
+const GNAME = {naive: "天真做法", kanon_k5: "k-anon k=5", kanon_k10: "k-anon k=10", "dpsynth_eps0.5": "DP ε=0.5", dpsynth_eps2: "DP ε=2", dpsynth_eps8: "DP ε=8", "pasynth_eps0.5": "用途感知 ε=0.5"};
+const Par = {
+  revealed: 99, before: 99, timer: null,
+  order() { return ["naive"].concat(S.incKanon ? ["kanon_k5", "kanon_k10"] : [], ["dpsynth_eps8", "dpsynth_eps2", "dpsynth_eps0.5"], S.incPA ? ["pasynth_eps0.5"] : []); },
+  render() {
+    const root = $("#parChart"); root.innerHTML = "";
+    const px = PX[S.px], py = PY[S.py], G = DATA.groups, order = this.order();
+    const pts = order.filter((g) => G[g] && G[g][px.g] && G[g][py.g]);
+    const missing = order.filter((g) => !pts.includes(g));
+    const m = {l: 70, r: 30, t: 24, b: 58}, W = 800, H = 470;
+    const xs = pts.flatMap((g) => [G[g][px.g].min, G[g][px.g].max]);
+    let x0, x1; if (px.auc) { x0 = 0.45; x1 = Math.max(0.6, ...xs) + 0.03; } else { x0 = 0; x1 = Math.max(0.01, ...xs) * 1.12; }
+    const ys = pts.flatMap((g) => [G[g][py.g].min, G[g][py.g].max]).concat(G.real ? [G.real[py.g].mean] : []);
+    const y0 = Math.max(0, Math.min(...ys) - 0.08), y1 = Math.min(1.05, Math.max(...ys) + 0.06);
+    const X = (v) => m.l + (v - x0) / (x1 - x0) * (W - m.l - m.r), Y = (v) => m.t + (1 - (v - y0) / (y1 - y0)) * (H - m.t - m.b);
+    const grid = svg("g", {class: "grid"}, root), axis = svg("g", {class: "axis"}, root);
+    const nice = (a, b, n) => { const s = Math.pow(10, Math.floor(Math.log10((b - a) / n))); const st = [1, 2, 5, 10].map((k) => k * s).find((k) => (b - a) / k <= n); const out = []; for (let v = Math.ceil(a / st) * st; v <= b + 1e-9; v += st) out.push(+v.toFixed(6)); return out; };
+    const fx = (v) => px.auc ? v.toFixed(2) : (v * 100).toFixed(v < 0.1 ? 0 : 0) + "%";
+    nice(x0, x1, 7).forEach((v) => { svg("line", {x1: X(v), x2: X(v), y1: m.t, y2: H - m.b}, grid); svg("text", {x: X(v), y: H - m.b + 20, "text-anchor": "middle", class: "tab"}, axis).textContent = fx(v); });
+    nice(y0, y1, 6).forEach((v) => { svg("line", {x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v)}, grid); svg("text", {x: m.l - 10, y: Y(v) + 4, "text-anchor": "end", class: "tab"}, axis).textContent = S.py === "prauc" ? v.toFixed(2) : Math.round(v * 100) + "%"; });
+    svg("text", {x: (m.l + W - m.r) / 2, y: H - 12, "text-anchor": "middle", class: "ttl"}, axis).textContent = px.name + "（越左越安全）";
+    svg("text", {x: 18, y: (m.t + H - m.b) / 2, "text-anchor": "middle", class: "ttl", transform: `rotate(-90 18 ${(m.t + H - m.b) / 2})`}, axis).textContent = py.name + "（越高越好）";
+    if (S.zones) {
+      if (px.auc) { svg("rect", {x: m.l, y: m.t, width: Math.max(0, X(0.55) - m.l), height: H - m.t - m.b, fill: cssv("--green"), opacity: 0.07}, root);
+        svg("line", {x1: X(0.55), x2: X(0.55), y1: m.t, y2: H - m.b, stroke: cssv("--orange"), "stroke-dasharray": "6 5", "stroke-width": 1.5}, root);
+        svg("text", {x: X(0.55) - 8, y: m.t + 16, "text-anchor": "end", "font-size": 12, fill: cssv("--green"), "font-weight": 600}, root).textContent = "攻擊未成功區"; }
+      if (S.py === "lift" && 0.5 > y0) { svg("line", {x1: m.l, x2: W - m.r, y1: Y(0.5), y2: Y(0.5), stroke: cssv("--orange"), "stroke-dasharray": "6 5", "stroke-width": 1.5}, root);
+        svg("text", {x: W - m.r - 6, y: Y(0.5) - 6, "text-anchor": "end", "font-size": 12, fill: cssv("--orange")}, root).textContent = "實用門檻 0.5"; }
+      if (S.py === "prauc" && G.naive && G.naive.pr_auc_noskill > y0) { const v = G.naive.pr_auc_noskill; svg("line", {x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), stroke: cssv("--label3"), "stroke-width": 1.5}, root);
+        svg("text", {x: W - m.r - 6, y: Y(v) - 6, "text-anchor": "end", "font-size": 12}, root).textContent = `全猜多數類 ${v.toFixed(3)}`; }
+    }
+    const occupied = [];
+    if (G.real && G.real[py.g]) { const v = G.real[py.g].mean; occupied.push({x0: m.l + 8, x1: m.l + 250, y0: Y(v) - 22, y1: Y(v) - 2});
+      svg("line", {x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), stroke: cssv("--gray"), "stroke-width": 1.5, "stroke-dasharray": "2 4"}, root);
+      svg("text", {x: m.l + 8, y: Y(v) - 7, "font-size": 12, fill: cssv("--label2")}, root).textContent = "原始資料（上限）"; }
+    const layer = svg("g", {}, root), labels = [];
+    pts.forEach((g, i) => {
+      const gx = G[g][px.g], gy = G[g][py.g], col = cssv(TINT[g]), on = i < this.revealed, fresh = on && i >= this.before;
+      const gg = svg("g", {}, layer); gg.style.transition = `opacity ${T(0.5)}ms, transform ${T(0.6)}ms cubic-bezier(.3,1.3,.5,1)`;
+      gg.style.transformOrigin = `${X(gx.mean)}px ${Y(gy.mean)}px`; gg.style.opacity = on && !fresh ? 1 : 0; gg.style.transform = on && !fresh ? "scale(1)" : "scale(.4)";
+      if (fresh) requestAnimationFrame(() => requestAnimationFrame(() => { gg.style.opacity = 1; gg.style.transform = "scale(1)"; }));
+      if (S.range3 && gx.n > 1) { svg("line", {x1: X(gx.min), x2: X(gx.max), y1: Y(gy.mean), y2: Y(gy.mean), stroke: col, "stroke-width": 2, opacity: .5}, gg);
+        svg("line", {x1: X(gx.mean), x2: X(gx.mean), y1: Y(gy.min), y2: Y(gy.max), stroke: col, "stroke-width": 2, opacity: .5}, gg); }
+      const released = g === "dpsynth_eps0.5";
+      if (released) svg("circle", {cx: X(gx.mean), cy: Y(gy.mean), r: 15, fill: "none", stroke: col, "stroke-width": 2, opacity: .45}, gg);
+      if (g.startsWith("pa")) svg("rect", {x: X(gx.mean) - 7, y: Y(gy.mean) - 7, width: 14, height: 14, transform: `rotate(45 ${X(gx.mean)} ${Y(gy.mean)})`, fill: col, stroke: cssv("--bg-elev"), "stroke-width": 2}, gg);
+      else svg("circle", {cx: X(gx.mean), cy: Y(gy.mean), r: 8, fill: col, stroke: cssv("--bg-elev"), "stroke-width": 2}, gg);
+      labels.push({gg, x: X(gx.mean), y: Y(gy.mean), text: GNAME[g] + (released ? "・釋出" : "")});
+    });
+    if (S.labels) {  // 標籤避讓：依序嘗試上下位移，避開已放的標籤與所有點
+      const tw = (t) => [...t].reduce((a, ch) => a + (/[\u0000-\u024f]/.test(ch) ? 7.6 : 13.2), 0);
+      const boxes = labels.map((l) => ({x0: l.x - 10, x1: l.x + 10, y0: l.y - 10, y1: l.y + 10})).concat(occupied);
+      const hit = (b) => boxes.some((o) => b.x0 < o.x1 && b.x1 > o.x0 && b.y0 < o.y1 && b.y1 > o.y0);
+      for (const l of [...labels].sort((a, b) => a.y - b.y)) {
+        const w = tw(l.text), right = l.x + 14 + w < W - m.r;
+        let best = null;
+        for (const dy of [-6, 10, -22, 26, -38, 42, -54, 58]) {
+          const x0 = right ? l.x + 14 : l.x - 14 - w, b = {x0, x1: x0 + w, y0: l.y + dy - 13, y1: l.y + dy + 3};
+          if (!hit(b)) { best = {b, dy}; break; }
+        }
+        best = best || {b: {x0: right ? l.x + 14 : l.x - 14 - w, x1: 0, y0: 0, y1: 0}, dy: -6};
+        boxes.push(best.b);
+        const t = svg("text", {x: right ? l.x + 14 : l.x - 14, y: l.y + best.dy, "text-anchor": right ? "start" : "end", "font-size": 13, "font-weight": 600, fill: cssv("--label")}, l.gg);
+        t.textContent = l.text;
+        if (Math.abs(best.dy) > 12) svg("line", {x1: l.x + (right ? 9 : -9), y1: l.y, x2: right ? l.x + 13 : l.x - 13, y2: l.y + best.dy - 4, stroke: cssv("--label3"), "stroke-width": 1}, l.gg);
+      }
+    }
+    $("#parLegend").innerHTML = "<span>左上角最好：攻擊不成功、資料仍好用</span>";
+    this.pts = pts; this.before = this.revealed; this.readout();
+  },
+  readout() {
+    const px = PX[S.px], py = PY[S.py], G = DATA.groups, shown = this.pts.slice(0, this.revealed);
+    const fv = (v, auc) => auc ? f3(v) : pct(v, 2), fy = (v) => S.py === "prauc" ? f3(v) : pct(v);
+    const n = $("#parNarr"); const last = shown[shown.length - 1];
+    $("#parStepNo").textContent = this.revealed >= this.pts.length ? "全部" : `${Math.min(this.revealed, this.pts.length)} / ${this.pts.length}`;
+    if (!last) { $("#parTxt").textContent = "按播放，依序加入每種處理方式。"; return; }
+    if (this.revealed >= this.pts.length && this.pts.includes("dpsynth_eps0.5")) {
+      const r = G["dpsynth_eps0.5"];
+      $("#parTxt").innerHTML = `依事先寫定的規則選中 <b>DP ε=0.5</b> 並釋出：${px.auc ? "AUC" : "重識別率"} <b class="num">${fv(r[px.g].mean, px.auc)}</b>，${py.name} <b class="num">${fy(r[py.g].mean)}</b>`;
+      n.classList.remove("fade"); return;
+    }
+    n.classList.remove("fade"); void n.offsetWidth; n.classList.add("fade");
+    const gx = G[last][px.g], gy = G[last][py.g];
+    const verdict = px.auc ? (G[last][{R2: "R2_attack_unsuccessful", R2b_cal: "R2b_cal_attack_unsuccessful", R2c: "R2c_attack_unsuccessful"}[S.px]] ? "攻擊未成功" : "攻擊成功") : "";
+    $("#parTxt").innerHTML = `<b>${GNAME[last]}</b>：${px.auc ? "AUC" : "重識別率"} <b class="num">${fv(gx.mean, px.auc)}</b>${verdict ? `（${verdict}）` : ""}，${py.name} <b class="num">${fy(gy.mean)}</b>`;
+  },
+  play() { setPlaying(true); clearTimeout(this.timer); if (this.revealed >= this.pts.length) { this.revealed = 0; this.render(); }
+    const tick = () => { if (!playing) return; if (this.revealed < this.pts.length) { this.revealed++; this.render(); this.timer = setTimeout(tick, T(0.6) + S.dwell * 1000); }
+      else if (S.loop) { this.timer = setTimeout(() => { this.revealed = 0; this.render(); this.timer = setTimeout(tick, 600); }, S.dwell * 1500); } else setPlaying(false); };
+    this.timer = setTimeout(tick, 400); },
+  stop() { clearTimeout(this.timer); setPlaying(false); },
+  next() { this.stop(); if (this.revealed < this.pts.length) { this.revealed++; this.render(); } },
+  prev() { this.stop(); if (this.revealed > 0) { this.revealed = Math.min(this.revealed, this.pts.length) - 1; this.render(); } },
+  restart() { this.stop(); this.revealed = 0; this.render(); },
+};
+
+/* ---------------- 組裝 ---------------- */
+function showScene(s, auto = true) {
+  cur().stop(); scene = s; save(); markSceneTags();
+  document.querySelectorAll(".scene").forEach((e) => e.classList.toggle("on", e.id === "scene-" + s));
+  $("#sceneSeg")._set ? $("#sceneSeg")._set(s) : null;
+  if (s === "reid") { requestAnimationFrame(() => Reid.relayout()); }
+  if (s === "eps") { Eps.drawn = false; Eps.render(); }
+  if (s === "pareto") { Par.render(); }
+  if (auto && S.autoplay) setTimeout(() => cur().play(), 450);
+}
+function rebuildAll() { Reid.build(); Eps.drawn = false; Eps.render(); Par.render(); requestAnimationFrame(() => document.querySelectorAll(".seg").forEach(segThumb)); }
+
+(function init() {
+  applyLook();
+  const seg = $("#sceneSeg");
+  const set = (v) => { seg.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.v === v)); segThumb(seg); };
+  seg._set = set;
+  seg.addEventListener("click", (e) => { const b = e.target.closest("button"); if (b && b.dataset.v !== scene) { set(b.dataset.v); showScene(b.dataset.v); } });
+  buildSettings();
+  Reid.build();
+  showScene(scene, false); set(scene);
+  $("#bPlay").onclick = togglePlay;
+  const fwd = () => { if (scene === "reid") { Reid.stop(); Reid.next(); } else cur().next(); };
+  const back = () => { if (scene === "reid") { Reid.stop(); Reid.prev(); } else cur().prev(); };
+  const openSheet = (o) => { $("#sheet").classList.toggle("on", o); $("#scrim").classList.toggle("on", o); if (o) requestAnimationFrame(() => document.querySelectorAll("#sheet .seg").forEach(segThumb)); };
+  $("#bSet").onclick = () => openSheet(!$("#sheet").classList.contains("on"));
+  $("#bDone").onclick = () => openSheet(false); $("#scrim").onclick = () => openSheet(false);
+  const full = () => { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen?.().catch(() => {}); };
+  document.addEventListener("keydown", (e) => {
+    if (e.target.matches("input,select,textarea")) return;
+    if (e.code === "Space") { e.preventDefault(); togglePlay(); }
+    else if (e.key === "ArrowRight" || e.key === "PageDown") { e.preventDefault(); fwd(); }
+    else if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); back(); }
+    else if (e.key === "r" || e.key === "R") cur().restart();
+    else if (["1", "2", "3"].includes(e.key)) { const v = ["reid", "eps", "pareto"][+e.key - 1]; set(v); showScene(v); }
+    else if (e.key === "s" || e.key === "S") $("#bSet").click();
+    else if (e.key === "f" || e.key === "F") full();
+    else if (e.key === "d" || e.key === "D") { const dark = S.theme === "dark" || (S.theme === "auto" && matchMedia("(prefers-color-scheme: dark)").matches); setS("theme", dark ? "light" : "dark"); ctrls.theme.set(S.theme); }
+    else if (e.key === "Escape") openSheet(false);
+  });
+  let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { document.querySelectorAll(".seg").forEach(segThumb); if (scene === "reid") Reid.relayout(); }, 150); });
+  matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", () => { if (S.theme === "auto") rebuildAll(); });
+  $("#foot").innerHTML = `數字皆讀自 results/tables/（${esc(DATA.generated_at.slice(0, 10))} 產生）。點的位置為示意，數量為實際比對結果。攻擊未成功 ≠ 沒有風險。`;
+})();
+</script>
+</body>
+</html>
